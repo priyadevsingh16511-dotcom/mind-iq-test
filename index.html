@@ -85,6 +85,7 @@ function shuffle(arr) {
 function sample(arr, n) { return shuffle(arr).slice(0, n); }
 let uidc = 0;
 function uid() { uidc += 1; return 'q' + uidc; }
+let GEN_KIND = '';   // which template a generated question used (for item statistics only)
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 function erf(x0) {
   const s = x0 < 0 ? -1 : 1;
@@ -151,6 +152,7 @@ function genSeries(level) {
     : level === 2 ? ['arith2', 'geom', 'grow', 'fib', 'affine', 'alt', 'sq']
     : ['fib', 'affine', 'alt', 'sq', 'inter', 'dd', 'cube', 'grow'];
   const kind = pick(kinds);
+  GEN_KIND = kind;
   const seq = [];
   if (kind === 'arith') {
     const s = ri(1, 40), d = ri(2, 9);
@@ -206,7 +208,9 @@ function genSeries(level) {
 }
 function seriesItem(area, level) {
   const g = genSeries(level);
-  return numItem(area, g.shown.join(',  ') + ',  ?\n' + t('seriesQ'), g.ans, [g.hint, g.ans + 1, g.ans - 1]);
+  const it = numItem(area, g.shown.join(',  ') + ',  ?\n' + t('seriesQ'), g.ans, [g.hint, g.ans + 1, g.ans - 1]);
+  it.bid = 'g:' + area + ':ser-' + GEN_KIND + ':' + level;
+  return it;
 }
 
 /* letter series */
@@ -215,6 +219,7 @@ function genLetters(level) {
   const kinds = level <= 1 ? ['step', 'back'] : level === 2 ? ['step', 'alt', 'back'] : ['alt', 'inter', 'grow'];
   for (let attempt = 0; attempt < 200; attempt++) {
     const kind = pick(kinds);
+    GEN_KIND = kind;
     const idx = [];
     if (kind === 'step') {
       const d = ri(2, 4), s = ri(0, 25 - 5 * d);
@@ -251,17 +256,25 @@ function letterItem(level) {
     const v = ai + d;
     if (v >= 0 && v <= 25) wrongs.push(ALPHA[v]);
   }
-  return mcItem('pat', g.shown.join(',  ') + ',  ?\n' + t('letterQ'), g.ans, wrongs);
+  const it = mcItem('pat', g.shown.join(',  ') + ',  ?\n' + t('letterQ'), g.ans, wrongs);
+  it.bid = 'g:pat:let-' + GEN_KIND + ':' + level;
+  return it;
 }
 
 /* matrices */
 const SYM6 = ['●', '■', '▲', '◆', '★', '✚'];
 const DIRS = ['↑', '→', '↓', '←'];
 function matrixItem(area, level) {
+  const it = matrixItemRaw(area, level);
+  it.bid = 'g:' + area + ':mat-' + GEN_KIND + ':' + level;
+  return it;
+}
+function matrixItemRaw(area, level) {
   const kinds = level <= 1 ? ['latin', 'count']
     : level === 2 ? ['latin', 'count', 'sum', 'arrows', 'diff']
     : ['count', 'product', 'grid', 'mult', 'arrows', 'sum'];
   const kind = pick(kinds);
+  GEN_KIND = kind;
   const prompt = t('matrixQ');
   if (kind === 'latin') {
     const syms = sample(SYM6, 3);
@@ -656,10 +669,16 @@ const TEMP = {
 
 const NONSENSE = ['zorbs', 'plinks', 'quads', 'mivs', 'teks', 'borns', 'fendles', 'gribs', 'slarps', 'dorbs', 'wuffs', 'nerks'];
 function syllogismItem(level) {
+  const it = syllogismItemRaw(level);
+  it.bid = 'g:logic:syl-' + GEN_KIND + ':' + level;
+  return it;
+}
+function syllogismItemRaw(level) {
   const t = sample(NONSENSE, 3);
   const X = t[0], Y = t[1], Z = t[2];
   const kinds = level <= 1 ? [1, 2, 3] : level === 2 ? [1, 2, 3, 4, 5] : [2, 3, 4, 5];
   const k = pick(kinds);
+  GEN_KIND = k;
   if (LANG === 'hi') return syllogismHi(k, X, Y, Z);
   const q = '\nWhich conclusion must follow?';
   if (k === 1) return mcItem('logic', 'All ' + X + ' are ' + Y + '.\nAll ' + Y + ' are ' + Z + '.' + q, 'All ' + X + ' are ' + Z, ['All ' + Z + ' are ' + X, 'No ' + X + ' are ' + Z, 'Some ' + Y + ' are not ' + Z]);
@@ -694,6 +713,11 @@ const ADJ = [
   ['heavier', 'lighter', 'heaviest', 'lightest']
 ];
 function orderingItem(area, n) {
+  const it = orderingItemRaw(area, n);
+  it.bid = 'g:' + area + ':ord-' + n;
+  return it;
+}
+function orderingItemRaw(area, n) {
   const names = sample(NAMES, n).map(function (x) { return LANG === 'hi' ? (NAMES_HI[x] || x) : x; });
   const ai = ri(0, ADJ.length - 1);
   const adj = ADJ[ai];
@@ -719,10 +743,18 @@ function logicBankItem(level, strict) {
   let pool = LOGICS.filter(function (l) { return strict ? l.lvl === level : Math.abs(l.lvl - level) <= 1; });
   if (pool.length < 2) pool = LOGICS;
   const l = pick(pool);
-  return mcItem('logic', l.p, l.c, l.w);
+  const it = mcItem('logic', l.p, l.c, l.w);
+  it.bid = 'L' + LOGICS.indexOf(l);
+  return it;
 }
 function wordProblem() {
+  const it = wordProblemRaw();
+  it.bid = 'g:power:word-' + GEN_KIND;
+  return it;
+}
+function wordProblemRaw() {
   const t = ri(0, 4);
+  GEN_KIND = t;
   if (t === 0) {
     const m = pick([3, 4, 5, 6, 8]), mins = pick([4, 5, 6, 8, 10, 12]), N = pick([40, 60, 100, 120, 200]);
     return numItem('power', LANG === 'hi'
@@ -797,7 +829,7 @@ function oddSymbolItem(trial) {
   for (let i = 0; i < cols * rows; i++) cells.push(base);
   const k = ri(0, cols * rows - 1);
   cells[k] = odd;
-  return { id: uid(), area: 'attn', prompt: t('oddSym'), options: [], answer: k, pick: true, grid: { cols: cols, cells: cells, minH: 38, font: 18, maxW: 340 } };
+  return { id: uid(), bid: 'g:attn:oddsym-' + trial, area: 'attn', prompt: t('oddSym'), options: [], answer: k, pick: true, grid: { cols: cols, cells: cells, minH: 38, font: 18, maxW: 340 } };
 }
 function countTargetItem(trial) {
   const pr = pick([['▲', '△'], ['●', '○'], ['■', '□']]);
@@ -808,7 +840,9 @@ function countTargetItem(trial) {
   for (let i = 0; i < total; i++) cells.push(pick(dis));
   const spots = sample(Array.from({ length: total }, function (_, i) { return i; }), k);
   for (const s of spots) cells[s] = pr[0];
-  return numItem('attn', t('countSym', { s: pr[0] }), k, [k + 1, k - 1], { cols: cols, cells: cells, minH: 34, font: 18, maxW: 340 });
+  const it = numItem('attn', t('countSym', { s: pr[0] }), k, [k + 1, k - 1], { cols: cols, cells: cells, minH: 34, font: 18, maxW: 340 });
+  it.bid = 'g:attn:count-' + trial;
+  return it;
 }
 
 const LIKERT = ['Strongly disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly agree'];
@@ -1424,6 +1458,7 @@ const UI_TEXT = {
     sleep: 'Sleep last night', prior: 'Have you taken a similar test before?',
     select: 'Select',
     consent: 'I understand that my answers and results will be sent to my counsellor, and that I will not see the results on this screen.',
+    researchConsent: 'Optional: I agree that my anonymised answers (without my name) may be used for research.',
     startBtn: 'Start the assessment',
     stillNeeded: 'Still needed: {list}.', needName: 'your name', needAge: 'a valid age', needEdu: 'your education', needConsent: 'the consent tick box',
     expectTitle: 'What to expect',
@@ -1481,6 +1516,7 @@ const UI_TEXT = {
      "prior": "क्या आपने पहले भी ऐसा कोई test दिया है?",
      "select": "चुनिए",
      "consent": "मुझे पता है कि मेरे जवाब और result मेरे counsellor को भेजे जाएंगे, और result इस screen पर नहीं दिखेगा।",
+     "researchConsent": "Optional: मैं agree करता/करती हूँ कि मेरे जवाब, बिना मेरे नाम के (anonymised), research के लिए use किए जा सकते हैं।",
      "startBtn": "Test शुरू करें",
      "stillNeeded": "अभी ये बाकी है: {list}।",
      "needName": "आपका नाम",
@@ -1686,14 +1722,15 @@ function gen(fn) {
   }
   return fn();
 }
-function analogyItem(a) { return mcItem('verb', a[0] + '\n' + t('anaQ'), a[1], [a[2], a[3], a[4]]); }
+function analogyItem(a) { const it = mcItem('verb', a[0] + '\n' + t('anaQ'), a[1], [a[2], a[3], a[4]]); it.bid = 'A' + ANALOGIES.indexOf(a); return it; }
 function oddItem(o) {
   const opts = shuffle(o.same.concat([o.odd]));
-  return { id: uid(), area: 'verb', prompt: t('oddQ'), options: opts, answer: opts.indexOf(o.odd) };
+  return { id: uid(), bid: 'O' + ODDS.indexOf(o), area: 'verb', prompt: t('oddQ'), options: opts, answer: opts.indexOf(o.odd) };
 }
 function logicFrom(l, area) {
   const it = mcItem(area, l.p, l.c, l.w);
   it.key = kL(l);
+  it.bid = 'L' + LOGICS.indexOf(l);
   return it;
 }
 function buildCognitive(L) {
@@ -1725,8 +1762,8 @@ function buildPower(L) {
 function buildPersonality() {
   const items = [];
   for (const t of Object.keys(BIG)) {
-    for (const x of sample(BIG[t].pos, 2)) items.push({ id: uid(), trait: t, text: x, rev: false });
-    for (const x of sample(BIG[t].rev, 2)) items.push({ id: uid(), trait: t, text: x, rev: true });
+    for (const x of sample(BIG[t].pos, 2)) items.push({ id: uid(), bid: 'B' + t + '+' + BIG[t].pos.indexOf(x), trait: t, text: x, rev: false });
+    for (const x of sample(BIG[t].rev, 2)) items.push({ id: uid(), bid: 'B' + t + '-' + BIG[t].rev.indexOf(x), trait: t, text: x, rev: true });
   }
   return shuffle(items);
 }
@@ -1735,22 +1772,27 @@ function buildTemporal() {
   const flags = shuffle([false, false, true, true]);
   Object.keys(TEMP).forEach(function (t, i) {
     const rv = flags[i % 4];
-    items.push({ id: uid(), trait: t, text: pick(rv ? TEMP[t].rev : TEMP[t].pos), rev: rv });
+    const tx = pick(rv ? TEMP[t].rev : TEMP[t].pos);
+    items.push({ id: uid(), bid: 'T' + t + (rv ? '-' + TEMP[t].rev.indexOf(tx) : '+' + TEMP[t].pos.indexOf(tx)), trait: t, text: tx, rev: rv });
   });
   return shuffle(items);
 }
 function buildEI(L) {
   const items = [];
   for (const q of take(lvlPool(PERCEIVE, L, function (x) { return x[5]; }), 3, kE)) {
-    items.push(mcItem('per', q[0] + '\n' + t('perQ'), q[1], [q[2], q[3], q[4]]));
+    const it = mcItem('per', q[0] + '\n' + t('perQ'), q[1], [q[2], q[3], q[4]]);
+    it.bid = 'P' + PERCEIVE.indexOf(q);
+    items.push(it);
   }
   for (const q of take(lvlPool(UNDERSTAND, L, function (x) { return x[5]; }), 2, kE)) {
-    items.push(mcItem('und', q[0], q[1], [q[2], q[3], q[4]]));
+    const it = mcItem('und', q[0], q[1], [q[2], q[3], q[4]]);
+    it.bid = 'U' + UNDERSTAND.indexOf(q);
+    items.push(it);
   }
   for (const s of take(lvlPool(MANAGE, L, function (x) { return x.lvl; }), 2, kE)) {
     const idx = shuffle([0, 1, 2, 3]);
     items.push({
-      id: uid(), area: 'man', prompt: s.s + '\n' + t('manQ'),
+      id: uid(), bid: 'M' + MANAGE.indexOf(s), area: 'man', prompt: s.s + '\n' + t('manQ'),
       options: idx.map(function (i) { return s.o[i][0]; }),
       pts: idx.map(function (i) { return s.o[i][1]; }),
       answer: idx.indexOf(0)
@@ -1762,6 +1804,29 @@ function scoreItem(it, sel) {
   if (sel === undefined || sel === null || sel < 0) return 0;
   if (it.pts) return it.pts[sel] === undefined ? 0 : it.pts[sel];
   return sel === it.answer ? 1 : 0;
+}
+/* Item-level record for validation research (sent in the payload, never shown to the client).
+   One entry per screen, in the order shown: [itemId, section, score, ms]
+   score: 1/0 for right/wrong (Managing-emotions items 0 to 1), 1-5 for statements (reverse items already flipped),
+   null = skipped; digit span = longest span; speed block = number correct. ms = time on that screen. */
+const ITEMS_FORMAT = 'v1: [itemId, section, score (null = skipped), ms]; first ' + STARTER_N + ' entries = starter (routing) questions';
+function itemLog(steps, answers, sc, rt) {
+  return steps.map(function (s, i) {
+    const ms = (rt && typeof rt[i] === 'number') ? Math.min(3600000, Math.max(0, Math.round(rt[i]))) : null;
+    if (s.kind === 'mc') {
+      const sel = answers[s.item.id];
+      const skip = sel === undefined || sel === null || sel < 0;
+      return [s.item.bid || ('?' + s.item.area), s.item.area, skip ? null : Math.round(scoreItem(s.item, sel) * 100) / 100, ms];
+    }
+    if (s.kind === 'likert') {
+      const sel = answers[s.item.id];
+      const skip = sel === undefined || sel === null || sel < 0;
+      return [s.item.bid || ('?' + s.item.trait), s.item.trait, skip ? null : (s.item.rev ? 5 - sel : sel + 1), ms];
+    }
+    if (s.kind === 'span') return ['span:' + s.dir, 'span', (sc && sc[s.dir === 'fwd' ? 'wm_f' : 'wm_b']) || 0, ms];
+    if (s.kind === 'speed') return ['speed', 'speed', (sc && sc.sp_c) || 0, ms];
+    return ['?', s.kind, null, ms];
+  });
 }
 function buildStarter() {
   usedKeys = {};
@@ -2041,7 +2106,8 @@ function buildPayload(ctx) {
       name: (bio.name || '').trim(), age: parseInt(bio.age, 10), ageBand: band.label, gender: bio.gender || '', education: bio.edu || '',
       occupation: bio.occ || '', state: bio.state || '', language: bio.lang || '',
       englishComfort: LANG === 'hi' ? 'n/a (test taken in Hindi)' : ENG_LABELS[(parseInt(bio.eng, 10) || 3) - 1],
-      readingComfort: ENG_LABELS[(parseInt(bio.eng, 10) || 3) - 1], readingComfortLanguage: LANG === 'hi' ? 'Hindi (Hinglish)' : 'English', sleepLastNight: bio.sleep || '', similarTestBefore: bio.prior || ''
+      readingComfort: ENG_LABELS[(parseInt(bio.eng, 10) || 3) - 1], readingComfortLanguage: LANG === 'hi' ? 'Hindi (Hinglish)' : 'English', sleepLastNight: bio.sleep || '', similarTestBefore: bio.prior || '',
+      researchConsent: !!ctx.researchConsent
     },
     estimate: { iq: r.iq, rangeLow: r.lo, rangeHigh: r.hi, percentile: r.pct, category: r.cat },
     summary: rep.summary,
@@ -2068,7 +2134,9 @@ function buildPayload(ctx) {
       norms: { bandMean: band.mu, bandSD: band.sd, biodataAdjustment: ctx.adj.adj, adjustmentReasons: ctx.adj.notes },
       itemCounts: { scoredQuestions: r.answered + r.skipped, answered: r.answered, skipped: r.skipped, timedTasks: 'digit span and speed block (not counted in the scored questions)' }
     },
-    disclaimer: NOTICE
+    disclaimer: NOTICE,
+    itemsFormat: ITEMS_FORMAT,
+    items: ctx.items || []
   };
 }
 
@@ -2147,8 +2215,8 @@ function buildReportText(p) {
 const S = {
   phase: 'lang',
   bio: { name: '', age: '', gender: '', edu: '', occ: '', state: '', lang: '', eng: '3', sleep: '', prior: '' },
-  consent: false,
-  steps: [], idx: 0, level: 0, answers: {}, scores: {},
+  consent: false, researchConsent: false,
+  steps: [], rt: {}, shownAt: 0, idx: 0, level: 0, answers: {}, scores: {},
   payload: null, text: '', submitting: false, submitted: false, error: ''
 };
 let EST = null;
@@ -2238,6 +2306,7 @@ function renderStart() {
     selectField('sleep', t('sleep'), SLEEPS) +
     selectField('prior', t('prior'), PRIORS) +
     '<label class="check"><input type="checkbox" id="consent"' + (S.consent ? ' checked' : '') + '><span>' + esc(t('consent')) + '</span></label>' +
+    '<label class="check"><input type="checkbox" id="rconsent"' + (S.researchConsent ? ' checked' : '') + '><span>' + esc(t('researchConsent')) + '</span></label>' +
     '<button type="button" class="btn primary" id="startBtn" disabled>' + esc(t('startBtn')) + '</button>' +
     '<p class="muted small" id="startHint"></p></section>' +
     '<section class="card"><h2>' + esc(t('expectTitle')) + '</h2><p class="muted">' + esc(t('expectText')) + '</p></section>';
@@ -2253,6 +2322,7 @@ function renderStart() {
     });
   });
   $('#consent').addEventListener('change', function (e) { S.consent = e.target.checked; refreshStart(); });
+  $('#rconsent').addEventListener('change', function (e) { S.researchConsent = e.target.checked; });
   $('#startBtn').addEventListener('click', startTest);
   refreshStart();
 }
@@ -2279,7 +2349,7 @@ function refreshStart() {
 function startTest() {
   if (!startValid().ok) return;
   S.steps = buildStarter();
-  S.level = 0; S.idx = 0; S.answers = {}; S.scores = {};
+  S.level = 0; S.idx = 0; S.answers = {}; S.scores = {}; S.rt = {};
   S.payload = null; S.text = ''; S.submitting = false; S.submitted = false; S.error = '';
   S.phase = 'run';
   render();
@@ -2287,6 +2357,7 @@ function startTest() {
 
 /* ---- run ---- */
 function renderRun() {
+  S.shownAt = Date.now();
   const step = S.steps[S.idx];
   const total = S.level === 0 ? EST.total : S.steps.length;
   const pct = Math.min(100, (S.idx / total) * 100);
@@ -2449,6 +2520,7 @@ function mountSpeed(step, panel) {
   });
 }
 function next() {
+  if (S.shownAt) S.rt[S.idx] = Date.now() - S.shownAt;
   if (S.level === 0 && S.idx + 1 === STARTER_N) {
     S.level = routeLevel(S.steps, S.answers);
     S.steps = S.steps.concat(buildRest(S.level));
@@ -2477,6 +2549,7 @@ function finishRun() {
   const starterC = S.steps.slice(0, STARTER_N).reduce(function (acc, s) { return acc + (s.kind === 'mc' ? scoreItem(s.item, S.answers[s.item.id]) : 0); }, 0);
   S.payload = buildPayload({
     result: result, report: report, bio: S.bio, band: band, adj: adj, starterC: starterC,
+    researchConsent: S.researchConsent, items: itemLog(S.steps, S.answers, S.scores, S.rt),
     reportId: 'MIQ-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '-' + code,
     timestamp: d.toISOString(),
     testDate: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
