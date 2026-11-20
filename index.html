@@ -9,7 +9,7 @@
 :root{--bg:#f6f7f9;--card:#fff;--text:#14181f;--muted:#5b6472;--line:#dde1e8;--accent:#2457d6;--accentSoft:#e8eefc;--err:#b3261e;--errBg:#fdecea;--noteBg:#eef3ff}
 @media (prefers-color-scheme:dark){:root{--bg:#0f1218;--card:#181c24;--text:#eef1f6;--muted:#9aa4b5;--line:#2b313c;--accent:#7aa2ff;--accentSoft:#1f2a45;--err:#ff8a80;--errBg:#3a1b19;--noteBg:#1b2438}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans Devanagari","Nirmala UI",Mangal,sans-serif}
 #app{max-width:720px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:16px}
 .top h1{margin:8px 0 0;font-size:26px;line-height:1.2}
 .sub{margin:4px 0 0;color:var(--muted)}
@@ -69,7 +69,7 @@ const APP_NAME = 'Mind & IQ Assessment';          // change this to rename the a
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbx5D8w-Tn8vwhduQwQElFb66NmnKl6EZ0t0SBMyrDKECu6CP0_Pwnk-cGqCdMaHSfY/exec'; // paste your Google Apps Script web app URL here
 const DEBUG_PREVIEW = false;                       // keep false. true shows the report to the client (testing only)
 /* ===================================================================== */
-const TEST_VERSION = 'MIQ 3.0 (60-question adaptive screening)';
+const TEST_VERSION = 'MIQ 3.1 (60-question adaptive screening, English/Hinglish)';
 
 /* ===== Helpers ===== */
 function ri(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
@@ -206,7 +206,7 @@ function genSeries(level) {
 }
 function seriesItem(area, level) {
   const g = genSeries(level);
-  return numItem(area, g.shown.join(',  ') + ',  ?\nWhat number comes next in the series?', g.ans, [g.hint, g.ans + 1, g.ans - 1]);
+  return numItem(area, g.shown.join(',  ') + ',  ?\n' + t('seriesQ'), g.ans, [g.hint, g.ans + 1, g.ans - 1]);
 }
 
 /* letter series */
@@ -251,7 +251,7 @@ function letterItem(level) {
     const v = ai + d;
     if (v >= 0 && v <= 25) wrongs.push(ALPHA[v]);
   }
-  return mcItem('pat', g.shown.join(',  ') + ',  ?\nWhich letter comes next in the series?', g.ans, wrongs);
+  return mcItem('pat', g.shown.join(',  ') + ',  ?\n' + t('letterQ'), g.ans, wrongs);
 }
 
 /* matrices */
@@ -262,7 +262,7 @@ function matrixItem(area, level) {
     : level === 2 ? ['latin', 'count', 'sum', 'arrows', 'diff']
     : ['count', 'product', 'grid', 'mult', 'arrows', 'sum'];
   const kind = pick(kinds);
-  const prompt = 'Each row and column follows a rule. Which option replaces the “?” to complete the grid?';
+  const prompt = t('matrixQ');
   if (kind === 'latin') {
     const syms = sample(SYM6, 3);
     const rowsBase = shuffle([[0, 1, 2], [1, 2, 0], [2, 0, 1]]);
@@ -660,6 +660,7 @@ function syllogismItem(level) {
   const X = t[0], Y = t[1], Z = t[2];
   const kinds = level <= 1 ? [1, 2, 3] : level === 2 ? [1, 2, 3, 4, 5] : [2, 3, 4, 5];
   const k = pick(kinds);
+  if (LANG === 'hi') return syllogismHi(k, X, Y, Z);
   const q = '\nWhich conclusion must follow?';
   if (k === 1) return mcItem('logic', 'All ' + X + ' are ' + Y + '.\nAll ' + Y + ' are ' + Z + '.' + q, 'All ' + X + ' are ' + Z, ['All ' + Z + ' are ' + X, 'No ' + X + ' are ' + Z, 'Some ' + Y + ' are not ' + Z]);
   if (k === 2) return mcItem('logic', 'No ' + Y + ' are ' + Z + '.\nAll ' + X + ' are ' + Y + '.' + q, 'No ' + X + ' are ' + Z, ['All ' + X + ' are ' + Z, 'Some ' + X + ' are ' + Z, 'All ' + Z + ' are ' + X]);
@@ -667,6 +668,24 @@ function syllogismItem(level) {
   if (k === 4) return mcItem('logic', 'No ' + Y + ' are ' + Z + '.\nSome ' + X + ' are ' + Y + '.' + q, 'Some ' + X + ' are not ' + Z, ['All ' + X + ' are ' + Z, 'No ' + X + ' are ' + Y, 'Some ' + X + ' are ' + Z]);
   return mcItem('logic', 'All ' + X + ' are ' + Y + '.\nAll ' + Z + ' are ' + Y + '.' + q, 'No definite link between ' + X + ' and ' + Z + ' can be concluded', ['All ' + X + ' are ' + Z, 'Some ' + X + ' are ' + Z, 'No ' + X + ' are ' + Z]);
 }
+/* HI-TEMPLATE: Hindi syllogisms with made-up words */
+const NONSENSE_HI = { zorbs: 'ज़ॉर्ब', plinks: 'प्लिंक', quads: 'क्वाड', mivs: 'मिव', teks: 'टेक', borns: 'बॉर्न', fendles: 'फ़ेंडल', gribs: 'ग्रिब', slarps: 'स्लार्प', dorbs: 'डॉर्ब', wuffs: 'वफ़', nerks: 'नेर्क' };
+function syllogismHi(k, X, Y, Z) {
+  X = NONSENSE_HI[X] || X; Y = NONSENSE_HI[Y] || Y; Z = NONSENSE_HI[Z] || Z;
+  const q = '\nइससे कौन सी बात ज़रूर सच होगी?';
+  const all = function (a, b) { return 'सभी ' + a + ', ' + b + ' हैं'; };
+  const no = function (a, b) { return 'कोई भी ' + a + ', ' + b + ' नहीं है'; };
+  const some = function (a, b) { return 'कुछ ' + a + ', ' + b + ' हैं'; };
+  const someNot = function (a, b) { return 'कुछ ' + a + ', ' + b + ' नहीं हैं'; };
+  if (k === 1) return mcItem('logic', all(X, Y) + '।\n' + all(Y, Z) + '।' + q, all(X, Z), [all(Z, X), no(X, Z), someNot(Y, Z)]);
+  if (k === 2) return mcItem('logic', no(Y, Z) + '।\n' + all(X, Y) + '।' + q, no(X, Z), [all(X, Z), some(X, Z), all(Z, X)]);
+  if (k === 3) return mcItem('logic', all(Y, Z) + '।\n' + some(X, Y) + '।' + q, some(X, Z), [all(X, Z), no(X, Z), all(Z, X)]);
+  if (k === 4) return mcItem('logic', no(Y, Z) + '।\n' + some(X, Y) + '।' + q, someNot(X, Z), [all(X, Z), no(X, Y), some(X, Z)]);
+  return mcItem('logic', all(X, Y) + '।\n' + all(Z, Y) + '।' + q, X + ' और ' + Z + ' के बीच कोई पक्का रिश्ता नहीं निकाला जा सकता', [all(X, Z), some(X, Z), no(X, Z)]);
+}
+/* HI-TEMPLATE: comparisons use the noun form (लंबाई, उम्र...) so the sentence works for any name and gender */
+const ADJ_HI = [['लंबाई', 'की'], ['उम्र', 'की'], ['रफ़्तार', 'की'], ['वज़न', 'का']];
+const NAMES_HI = { Aarav: 'आरव', Bhavna: 'भावना', Chetan: 'चेतन', Divya: 'दिव्या', Esha: 'ईशा', Farhan: 'फ़रहान', Gautam: 'गौतम', Harini: 'हरिणी', Imran: 'इमरान', Jaya: 'जया', Kabir: 'कबीर', Lakshmi: 'लक्ष्मी', Manoj: 'मनोज', Nisha: 'निशा', Omkar: 'ओमकार' };
 const NAMES = ['Aarav', 'Bhavna', 'Chetan', 'Divya', 'Esha', 'Farhan', 'Gautam', 'Harini', 'Imran', 'Jaya', 'Kabir', 'Lakshmi', 'Manoj', 'Nisha', 'Omkar'];
 const ADJ = [
   ['taller', 'shorter', 'tallest', 'shortest'],
@@ -675,20 +694,25 @@ const ADJ = [
   ['heavier', 'lighter', 'heaviest', 'lightest']
 ];
 function orderingItem(area, n) {
-  const names = sample(NAMES, n);
-  const adj = pick(ADJ);
+  const names = sample(NAMES, n).map(function (x) { return LANG === 'hi' ? (NAMES_HI[x] || x) : x; });
+  const ai = ri(0, ADJ.length - 1);
+  const adj = ADJ[ai];
+  const ah = ADJ_HI[ai];
+  const hi = LANG === 'hi';
   const stm = [];
   for (let i = 0; i < n - 1; i++) {
     const flip = Math.random() < 0.5;
-    stm.push(flip ? names[i + 1] + ' is ' + adj[1] + ' than ' + names[i] + '.' : names[i] + ' is ' + adj[0] + ' than ' + names[i + 1] + '.');
+    if (hi) stm.push(flip ? names[i + 1] + ' ' + ah[1] + ' ' + ah[0] + ' ' + names[i] + ' से कम है।' : names[i] + ' ' + ah[1] + ' ' + ah[0] + ' ' + names[i + 1] + ' से ज़्यादा है।');
+    else stm.push(flip ? names[i + 1] + ' is ' + adj[1] + ' than ' + names[i] + '.' : names[i] + ' is ' + adj[0] + ' than ' + names[i + 1] + '.');
   }
   let q = '', ans = '';
   const r = Math.random();
-  if (n === 3 || r < 0.35) { q = 'Who is the ' + adj[2] + '?'; ans = names[0]; }
-  else if (r < 0.7) { q = 'Who is the ' + adj[3] + '?'; ans = names[n - 1]; }
-  else if (Math.random() < 0.5) { q = 'Who is the second ' + adj[2] + '?'; ans = names[1]; }
-  else { q = 'Who is the second ' + adj[3] + '?'; ans = names[n - 2]; }
-  const wrongs = shuffle(names.filter(function (x) { return x !== ans; })).concat(['Cannot be determined']);
+  const kis = ah[1] === 'का' ? 'किसका' : 'किसकी';
+  if (n === 3 || r < 0.35) { q = hi ? kis + ' ' + ah[0] + ' सबसे ज़्यादा है?' : 'Who is the ' + adj[2] + '?'; ans = names[0]; }
+  else if (r < 0.7) { q = hi ? kis + ' ' + ah[0] + ' सबसे कम है?' : 'Who is the ' + adj[3] + '?'; ans = names[n - 1]; }
+  else if (Math.random() < 0.5) { q = hi ? 'सबसे ज़्यादा से गिनें तो ' + ah[0] + ' में दूसरे number पर कौन है?' : 'Who is the second ' + adj[2] + '?'; ans = names[1]; }
+  else { q = hi ? 'सबसे कम से गिनें तो ' + ah[0] + ' में दूसरे number पर कौन है?' : 'Who is the second ' + adj[3] + '?'; ans = names[n - 2]; }
+  const wrongs = shuffle(names.filter(function (x) { return x !== ans; })).concat([t('cannot')]);
   return mcItem(area, shuffle(stm).join('\n') + '\n' + q, ans, wrongs);
 }
 function logicBankItem(level, strict) {
@@ -701,11 +725,14 @@ function wordProblem() {
   const t = ri(0, 4);
   if (t === 0) {
     const m = pick([3, 4, 5, 6, 8]), mins = pick([4, 5, 6, 8, 10, 12]), N = pick([40, 60, 100, 120, 200]);
-    return numItem('power', m + ' machines take ' + mins + ' minutes to make ' + m + ' widgets.\nHow many minutes would ' + N + ' machines take to make ' + N + ' widgets?', mins, [Math.round((N / m) * mins), N]);
+    return numItem('power', LANG === 'hi'
+      ? m + ' machines को ' + m + ' खिलौने बनाने में ' + mins + ' minute लगते हैं।\n' + N + ' machines को ' + N + ' खिलौने बनाने में कितने minute लगेंगे?'
+      : m + ' machines take ' + mins + ' minutes to make ' + m + ' widgets.\nHow many minutes would ' + N + ' machines take to make ' + N + ' widgets?', mins, [Math.round((N / m) * mins), N]);
   }
   if (t === 1) {
     const p = pick([10, 20, 30, 40, 50]);
     const x = (p * p) / 100;
+    if (LANG === 'hi') return mcItem('power', 'एक दुकानदार किसी चीज़ का दाम ' + p + '% बढ़ाता है, फिर नए दाम को ' + p + '% कम कर देता है।\nअसली दाम (मान लीजिए ₹1,000) के मुक़ाबले आख़िरी दाम कितना है?', x + '% कम', ['असली दाम जितना ही', x + '% ज़्यादा', p + '% कम']);
     return mcItem('power', 'A shopkeeper raises the price of an item by ' + p + '% and then reduces the new price by ' + p + '%.\nCompared with the original price (say ₹1,000), the final price is…', x + '% lower', ['The same as the original', x + '% higher', p + '% lower']);
   }
   if (t === 2) {
@@ -716,14 +743,20 @@ function wordProblem() {
       if (v > 0 && v % 3 === 0) { m = v / 3; break; }
     }
     if (m === 0) { n = 8; k = 4; m = 4; }
-    return numItem('power', 'I think of a number, double it, subtract ' + k + ', then divide by 3. The answer is ' + m + '.\nWhat number did I think of?', n, [m * 3, 2 * m + k]);
+    return numItem('power', LANG === 'hi'
+      ? 'मैंने एक number सोचा, उसे दुगना किया, उसमें से ' + k + ' घटाया, फिर 3 से भाग दिया। जवाब ' + m + ' आया।\nमैंने कौन सा number सोचा था?'
+      : 'I think of a number, double it, subtract ' + k + ', then divide by 3. The answer is ' + m + '.\nWhat number did I think of?', n, [m * 3, 2 * m + k]);
   }
   if (t === 3) {
     const M = ri(10, 40), d = ri(1, 5);
-    return numItem('power', 'The mean of five numbers is ' + M + '. When a sixth number is added, the mean rises to ' + (M + d) + '.\nWhat is the sixth number?', M + 6 * d, [M + d, M + 5 * d]);
+    return numItem('power', LANG === 'hi'
+      ? 'पाँच numbers का average ' + M + ' है। एक छठा number जोड़ने पर average बढ़कर ' + (M + d) + ' हो जाता है।\nछठा number क्या है?'
+      : 'The mean of five numbers is ' + M + '. When a sixth number is added, the mean rises to ' + (M + d) + '.\nWhat is the sixth number?', M + 6 * d, [M + d, M + 5 * d]);
   }
   const pr = pick([[12, 6, 8], [30, 20, 24], [60, 40, 48], [40, 24, 30], [15, 10, 12], [6, 3, 4]]);
-  return numItem('power', 'A car travels the first half of a journey at ' + pr[0] + ' km/h and the second half at ' + pr[1] + ' km/h.\nWhat is its average speed for the whole journey, in km/h?', pr[2], [(pr[0] + pr[1]) / 2]);
+  return numItem('power', LANG === 'hi'
+    ? 'एक car सफ़र का पहला आधा हिस्सा ' + pr[0] + ' km/h की speed से और बाकी आधा हिस्सा ' + pr[1] + ' km/h से पूरा करती है।\nपूरे सफ़र में उसकी average speed कितनी है (km/h में)?'
+    : 'A car travels the first half of a journey at ' + pr[0] + ' km/h and the second half at ' + pr[1] + ' km/h.\nWhat is its average speed for the whole journey, in km/h?', pr[2], [(pr[0] + pr[1]) / 2]);
 }
 function speedItem(L) {
   const t = ri(0, 5);
@@ -740,9 +773,9 @@ function speedItem(L) {
     return numItem('speed', x + ' × ' + y + ' = ?', x * y, [x * y + x, x * y - y]);
   }
   if (t === 3) {
-    if (Math.random() < 0.5) { const h = ri(10, 90); return numItem('speed', 'Half of ' + (h * 2) + ' is…', h, [h * 2, h + 10]); }
+    if (Math.random() < 0.5) { const h = ri(10, 90); return numItem('speed', LANG === 'hi' ? (h * 2) + ' का आधा कितना है?' : 'Half of ' + (h * 2) + ' is…', h, [h * 2, h + 10]); }
     const d = ri(13, 99);
-    return numItem('speed', 'Double ' + d + ' is…', d * 2, [d * 2 + 10, d * 2 - 10]);
+    return numItem('speed', LANG === 'hi' ? d + ' का दुगना कितना है?' : 'Double ' + d + ' is…', d * 2, [d * 2 + 10, d * 2 - 10]);
   }
   if (t === 4) {
     const s = ri(1, 30), d = ri(2, 9);
@@ -752,7 +785,7 @@ function speedItem(L) {
   while (nums.length < 4) { const v = ri(10, 99); if (nums.indexOf(v) < 0) nums.push(v); }
   const big = Math.random() < 0.5;
   const correct = big ? Math.max.apply(null, nums) : Math.min.apply(null, nums);
-  return mcItem('speed', 'Which of these is the ' + (big ? 'largest' : 'smallest') + ' number?', String(correct), nums.filter(function (n) { return n !== correct; }).map(String));
+  return mcItem('speed', LANG === 'hi' ? 'इनमें सबसे ' + (big ? 'बड़ा' : 'छोटा') + ' number कौन सा है?' : 'Which of these is the ' + (big ? 'largest' : 'smallest') + ' number?', String(correct), nums.filter(function (n) { return n !== correct; }).map(String));
 }
 const ODD_PAIRS = [['O', 'Q'], ['E', 'F'], ['M', 'N'], ['b', 'd'], ['p', 'q'], ['6', '9'], ['W', 'V'], ['R', 'P']];
 function oddSymbolItem(trial) {
@@ -764,7 +797,7 @@ function oddSymbolItem(trial) {
   for (let i = 0; i < cols * rows; i++) cells.push(base);
   const k = ri(0, cols * rows - 1);
   cells[k] = odd;
-  return { id: uid(), area: 'attn', prompt: 'One symbol in this grid is different from all the others. Tap it.', options: [], answer: k, pick: true, grid: { cols: cols, cells: cells, minH: 38, font: 18, maxW: 340 } };
+  return { id: uid(), area: 'attn', prompt: t('oddSym'), options: [], answer: k, pick: true, grid: { cols: cols, cells: cells, minH: 38, font: 18, maxW: 340 } };
 }
 function countTargetItem(trial) {
   const pr = pick([['▲', '△'], ['●', '○'], ['■', '□']]);
@@ -775,10 +808,855 @@ function countTargetItem(trial) {
   for (let i = 0; i < total; i++) cells.push(pick(dis));
   const spots = sample(Array.from({ length: total }, function (_, i) { return i; }), k);
   for (const s of spots) cells[s] = pr[0];
-  return numItem('attn', 'How many solid ' + pr[0] + ' symbols are in this grid? (Hollow shapes do not count.)', k, [k + 1, k - 1], { cols: cols, cells: cells, minH: 34, font: 18, maxW: 340 });
+  return numItem('attn', t('countSym', { s: pr[0] }), k, [k + 1, k - 1], { cols: cols, cells: cells, minH: 34, font: 18, maxW: 340 });
 }
 
 const LIKERT = ['Strongly disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly agree'];
+
+/* ===== LANGUAGE PACK: Hindi (Hinglish in Devanagari, common English words kept in English) ===== */
+const PACK_BANKS = {
+"analogies": [
+["चिड़िया", "घोंसला", "मधुमक्खी", "छत्ता", "शहद", "पंख", "फूल"],
+["गरम", "ठंडा", "दिन", "रात", "सूरज", "रोशनी", "सुबह"],
+["कलाई", "हाथ", "टख़ना (ankle)", "पैर", "जूता", "घुटना", "नाख़ून"],
+["किताब", "पढ़ना", "गाना", "सुनना", "radio", "आवाज़", "लिखना"],
+["Doctor", "hospital", "teacher", "school", "पढ़ाई", "student", "library"],
+["बच्चा", "आदमी", "पिल्ला", "कुत्ता", "दूध", "पूँछ", "बिल्ली"],
+["Pen", "लिखना", "चाकू", "काटना", "तेज़", "काँटा (fork)", "kitchen"],
+["आंख", "देखना", "कान", "सुनना", "आवाज़", "सिर", "music"],
+["अंगूठी", "उंगली", "कंगन", "कलाई", "गर्दन", "कान", "सोना"],
+["Writer", "novel", "music director", "धुन", "orchestra", "साज़", "concert"],
+["Thermometer", "temperature", "फुट्टा (ruler)", "लंबाई", "लकड़ी", "सीधा", "desk"],
+["बहादुर", "डरपोक", "दिलदार", "कंजूस", "दयालु", "अमीर", "सावधान"],
+["Painter", "canvas", "मूर्तिकार", "पत्थर", "gallery", "brush", "रंग"],
+["मछली", "पानी", "ऊँट", "रेगिस्तान", "जंगल", "पहाड़", "नदी"],
+["सूखा (drought)", "पानी", "अकाल (famine)", "अनाज", "भूख", "खेत", "बारिश"],
+["बीज", "पेड़", "अंडा", "चूज़ा", "घोंसला", "छिलका", "मुर्ग़ी"],
+["आग़ाज़", "अंजाम", "सूर्योदय", "सूर्यास्त", "दोपहर", "रोशनी", "आसमान"],
+["ईमानदार", "सच्चा", "सावधान", "चौकन्ना", "निडर", "लापरवाह", "जल्दबाज़"],
+["ताला", "चाबी", "problem", "solution", "puzzle", "सवाल", "दरवाज़ा"],
+["किफ़ायती", "कंजूस", "confident", "घमंडी", "शर्मीला", "काबिल", "विनम्र"],
+["शोर-शराबा", "सुरीला संगीत", "अफ़रा-तफ़री", "अनुशासन", "शोर", "गाना", "गड़बड़"],
+["Temporary", "permanent", "कमी", "भरमार", "दुर्लभ", "कीमती", "छोटा"],
+["Marathon", "100 meter race", "महाभारत", "दोहा", "उपन्यास", "कहानी", "नाटक"],
+["Pilot", "plane", "captain", "जहाज़", "crew", "समुंदर", "बंदरगाह"],
+["दूरबीन", "बहुत दूर", "microscope", "बहुत छोटा", "lens", "चमकदार", "scientist"],
+["सूरज", "दिन", "चाँद", "रात", "गर्मी", "पानी", "धूप"],
+["हाथ", "दस्ताना", "पैर", "मोज़ा", "घुटना", "उंगली", "चलना"],
+["गाय", "दूध", "मुर्ग़ी", "अंडा", "पंख", "farm", "दाना"],
+["रोटी", "खाना", "पानी", "पीना", "गीला", "नदी", "glass"],
+["Car", "सड़क", "train", "पटरी", "engine", "station", "ticket"],
+["कुत्ता", "पिल्ला", "मुर्ग़ी", "चूज़ा", "अंडा", "दाना", "घोंसला"],
+["Teacher", "student", "doctor", "मरीज़", "nurse", "दवाई", "clinic"],
+["December", "ठंड", "June", "गर्मी", "कोहरा", "ऊन", "बर्फ़"],
+["पंखा", "हवा", "दिया", "रोशनी", "बाती", "switch", "तार"],
+["बायाँ", "दायाँ", "ऊपर", "नीचे", "ऊँचा", "छत", "आसमान"],
+["कपास", "कपड़ा", "लकड़ी", "furniture", "पेड़", "जंगल", "कुल्हाड़ी"],
+["घड़ी", "समय", "तराज़ू", "वज़न", "दुकान", "भारी", "धातु"],
+["उजाला", "अंधेरा", "शोर", "शांति", "तेज़ आवाज़", "गाना", "भीड़"],
+["फूल", "पंखुड़ी", "पेड़", "पत्ता", "जंगल", "बगीचा", "छाया"],
+["Gram", "वज़न", "meter", "लंबाई", "फ़ीता", "कपड़ा", "रफ़्तार"],
+["दर्ज़ी", "सुई", "लकड़हारा", "कुल्हाड़ी", "पेड़", "जंगल", "लकड़ी"],
+["काँपना", "ठंड", "पसीना", "गर्मी", "पानी", "June", "त्वचा"],
+["Cricket", "bat", "hockey", "stick", "ball", "goal", "मैदान"],
+["पन्ना", "किताब", "पंखुड़ी", "फूल", "स्याही", "अक्षर", "library"],
+["फुसफुसाना", "चिल्लाना", "चलना", "दौड़ना", "कदम", "सड़क", "जूता"],
+["Kilometer", "दूरी", "घंटा", "समय", "घड़ी", "दिन", "रफ़्तार"],
+["Judge", "अदालत", "surgeon", "operation theatre", "चाकू", "दवाई", "nurse"],
+["कली", "फूल", "कच्चा आम", "पक्का आम", "पेड़", "खट्टा", "अचार"],
+["रुपया", "भारत", "yen", "जापान", "चीन", "कोरिया", "थाईलैंड"],
+["Chapter", "किताब", "scene", "film", "actor", "stage", "दर्शक"],
+["दिया", "तेल", "car", "petrol", "engine", "पहिया", "सड़क"],
+["दिवाली", "दीये", "होली", "रंग", "मिठाई", "छुट्टी", "March"],
+["बातूनी", "कम बोलने वाला", "फ़िज़ूल-ख़र्च", "किफ़ायती", "दिलदार", "शौक़ीन", "अमीर"],
+["अंदाज़ा", "जाँच", "plan", "अमल", "विचार", "लक्ष्य", "काग़ज़"],
+["मेहनती", "कामचोर", "ईमानदार", "बेईमान", "सच्चा", "सीधा", "शरीफ़"],
+["दर्ज़ी", "कपड़ा", "editor", "लेख", "pen", "printer", "library"],
+["Antidote", "ज़हर", "इलाज", "बीमारी", "doctor", "pharmacy", "कड़वा"],
+["Architect", "नक़्शा", "chef", "recipe", "मेहमान", "चूल्हा", "रसोई"],
+["लक्षण", "बीमारी", "clue", "रहस्य", "detective", "पैरों के निशान", "lens"],
+["शौक़िया", "professional", "शागिर्द", "उस्ताद", "विद्यार्थी", "मज़दूर", "नया"],
+["दशक (10 साल)", "सदी (100 साल)", "महीना", "साल", "हफ़्ता", "दिन", "मौसम"],
+["Zoology", "जानवर", "botany", "पौधे", "पक्षी", "पत्थर", "मछलियाँ"],
+["बीज", "पेड़", "चिंगारी", "आग", "धुआँ", "माचिस", "गर्मी"],
+["शक्की", "शक", "आशावादी", "उम्मीद", "डर", "खुशी", "गुस्सा"],
+["राजा", "राज्य", "principal", "school", "teacher", "student", "board"]
+],
+"odds": [
+["सेब, केला, चिकू, अंगूर", "गाजर"],
+["कुत्ता, बिल्ली, घोड़ा, खरगोश", "चिड़िया"],
+["लाल, नीला, हरा, पीला", "गोल"],
+["मेज़, कुर्सी, sofa, पलंग", "खिड़की"],
+["टोक्यो, पेरिस, लंदन, दुबई", "हिमालय"],
+["हथौड़ा, आरी, drill, पाना", "तकिया"],
+["piano, guitar, सितार, बांसुरी", "painting"],
+["triangle, square, pentagon, hexagon", "circle"],
+["2, 3, 5, 7", "9"],
+["4, 9, 16, 25", "20"],
+["गौरैया, चील, उल्लू, तोता", "चमगादड़"],
+["ताँबा, लोहा, जस्ता, tin", "काँच"],
+["जल्दी, फटाफट, तुरंत, झटपट", "धीरे"],
+["whale, dolphin, seal, walrus", "shark"],
+["ounce, gram, pound, kilogram", "litre"],
+["cube, sphere, cone, cylinder", "square"],
+["राजा रवि वर्मा, M.F. हुसैन, अमृता शेर-गिल, नंदलाल बोस", "लता मंगेशकर"],
+["सितार, सरोद, वीणा, संतूर", "शहनाई"],
+["फूलना, फैलना, बढ़ना, बड़ा होना", "सिकुड़ना"],
+["2, 4, 8, 16", "24"],
+["121, 144, 169, 196", "150"],
+["उपमा, रूपक, अनुप्रास, अतिशयोक्ति", "अनुच्छेद"],
+["दोहा, चौपाई, सोरठा, कुंडलिया", "उपन्यास"],
+["लोकतंत्र, राजतंत्र, गणतंत्र, तानाशाही", "पूँजीवाद"],
+["भरपूर, बहुत सारा, ढेर सारा, भरमार", "ज़रा सा"],
+["साफ़, स्पष्ट, पारदर्शी, निर्मल", "धुंधला"],
+["आम, केला, अमरूद, पपीता", "आलू"],
+["शेर, बाघ, तेंदुआ, cheetah", "हाथी"],
+["हिंदी, तमिल, बांग्ला, मराठी", "French"],
+["cricket, football, hockey, tennis", "painting"],
+["दिल्ली, मुंबई, चेन्नई, कोलकाता", "गंगा"],
+["shirt, pant, कुर्ता, jacket", "चम्मच"],
+["गुलाब, कमल, चमेली, गेंदा", "बरगद"],
+["Monday, Tuesday, Friday, Sunday", "January"],
+["चम्मच, काँटा, चाकू, करछी", "छाता"],
+["doctor, nurse, surgeon, pharmacist", "carpenter"],
+["bus, train, हवाई जहाज़, पानी का जहाज़", "sofa"],
+["कान, आंख, नाक, जीभ", "जूता"],
+["दूध, दही, मक्खन, पनीर", "चावल"],
+["kilometer, meter, centimeter, millimeter", "kilogram"],
+["एक, तीन, पाँच, सात", "चार"],
+["लोहा, ताँबा, aluminium, चाँदी", "plastic"],
+["carbon, oxygen, nitrogen, hydrogen", "पानी"],
+["चलना, दौड़ना, jogging करना, march करना", "लेटना"],
+["6, 12, 18, 24", "28"],
+["टैगोर, प्रेमचंद, बंकिम चंद्र, कालिदास", "रामानुजन"],
+["गंगा, यमुना, ब्रह्मपुत्र, गोदावरी", "विंध्य"],
+["काँसा, पीतल, steel, solder", "ताँबा"],
+["दौड़ना, कूदना, तैरना, चढ़ना", "लंबा"],
+["11, 13, 17, 19", "21"],
+["Jupiter, Saturn, Uranus, Neptune", "Mars"],
+["12, 18, 30, 42", "25"],
+["1, 8, 27, 64", "100"],
+["helium, neon, argon, krypton", "nitrogen"],
+["mammal, reptile, amphibian, bird", "insect"],
+["गुस्सा, डर, उदासी, घिन", "खुशी"],
+["noun, verb, adjective, adverb", "sentence"],
+["aorta, vein, artery, capillary", "kidney"],
+["thermometer, barometer, speedometer, ammeter", "telescope"],
+["रुपया, dollar, yen, euro", "महँगाई"],
+["कहानी, जीवनी, कविता, नाटक", "शब्दकोश"],
+["algorithm, program, software, code", "keyboard"],
+["खुश, प्रसन्न, आनंदित, मगन", "उदास"],
+["दयालु, उदार, दिलदार, परोपकारी", "कंजूस"],
+["चाणक्य, अरस्तू, सुकरात, प्लेटो", "तानसेन"]
+],
+"logics": [
+{"p": "अगर alarm बजता है, तो दरवाज़ा अपने आप lock हो जाता है।\nदरवाज़ा lock नहीं है।\nकौन सी बात पक्का सच है?", "c": "Alarm नहीं बजा", "w": ["Alarm बजा", "Alarm ख़राब है", "कुछ पक्का नहीं कहा जा सकता"]},
+{"p": "अगर alarm बजता है, तो दरवाज़ा अपने आप lock हो जाता है।\nदरवाज़ा lock है।\nकौन सी बात पक्का सच है?", "c": "Alarm बजा या नहीं, ये पक्का नहीं कहा जा सकता", "w": ["Alarm बजा", "Alarm नहीं बजा", "दरवाज़ा हाथ से lock किया गया"]},
+{"p": "हर manager meeting में आया।\nप्रिया meeting में नहीं आई।\nकौन सी बात पक्का सच है?", "c": "प्रिया manager नहीं है", "w": ["प्रिया manager है", "प्रिया छुट्टी पर थी", "कुछ managers meeting में नहीं आए"]},
+{"p": "किसी भी reptile के बाल (fur) नहीं होते।\nकुछ pets reptile हैं।\nकौन सी बात पक्का सच है?", "c": "कुछ pets के बाल नहीं होते", "w": ["सभी pets के बाल होते हैं", "कोई भी pet reptile नहीं है", "कुछ reptiles के बाल होते हैं"]},
+{"p": "या तो train late है, या सैम जल्दी आया है।\nसैम जल्दी नहीं आया।\nकौन सी बात पक्का सच है?", "c": "Train late है", "w": ["Train late नहीं है", "सैम late है", "कुछ पक्का नहीं कहा जा सकता"]},
+{"p": "Choir का हर member music (notes) पढ़ सकता है।\nMusic पढ़ने वाले कुछ लोग piano बजाते हैं।\nकौन सी बात पक्का सच है?", "c": "बाकी तीनों में से कोई भी बात पक्की नहीं है", "w": ["Choir के कुछ members piano बजाते हैं", "हर piano बजाने वाला choir में है", "Choir का कोई member piano नहीं बजाता"]},
+{"p": "जो भी revision करेगा, वो test में pass होगा।\nदेव test में pass नहीं हुआ।\nकौन सी बात पक्का सच है?", "c": "देव ने revision नहीं किया", "w": ["देव ने revision किया", "देव की किस्मत ख़राब थी", "कुछ पक्का नहीं कहा जा सकता"]},
+{"p": "Club में सिर्फ़ members ही जा सकते हैं।\nलीना club में गई।\nकौन सी बात पक्का सच है?", "c": "लीना member है", "w": ["लीना member नहीं है", "हर member club में गया", "Club लीना का है"]},
+{"p": "सभी squares rectangle होते हैं।\nकुछ rectangles लाल हैं।\nकौन सी बात पक्का सच है?", "c": "ये पक्का नहीं है कि कोई square लाल है", "w": ["कुछ squares लाल हैं", "सभी rectangles square हैं", "कोई भी square लाल नहीं है"]},
+{"p": "अगर weekday है, तो दुकान 8 बजे खुलती है।\nआज दुकान 8 बजे नहीं खुली।\nकौन सी बात पक्का सच है?", "c": "आज weekday नहीं है", "w": ["आज weekday है", "दुकान पूरे दिन बंद रही", "दुकान वाला देर तक सोया"]},
+{"p": "कुछ artists musician हैं।\nसभी musicians creative हैं।\nकौन सी बात पक्का सच है?", "c": "कुछ artists creative हैं", "w": ["सभी artists creative हैं", "कोई भी artist creative नहीं है", "सभी creative लोग musician हैं"]},
+{"p": "न टॉम के पास car है, न उमा के पास।\nविक के पास car तभी है जब टॉम के पास car हो, वरना नहीं।\nकौन सी बात पक्का सच है?", "c": "विक के पास car नहीं है", "w": ["विक के पास car है", "उमा, विक की car माँगती है", "कुछ पक्का नहीं कहा जा सकता"]},
+{"p": "Top three में आने वाले किसी भी runner ने लाल कपड़े नहीं पहने थे।\nमिया ने लाल कपड़े पहने थे।\nकौन सी बात पक्का सच है?", "c": "मिया top three में नहीं थी", "w": ["मिया race जीत गई", "मिया चौथे number पर आई", "बाकी सबने नीला पहना था"]},
+{"p": "Greenhouse के सभी पौधों को छाया चाहिए।\nइस fern को छाया नहीं चाहिए।\nकौन सी बात पक्का सच है?", "c": "ये fern greenhouse में नहीं है", "w": ["ये fern greenhouse में है", "Greenhouse में छाया नहीं है", "सभी ferns को धूप चाहिए"]},
+{"p": "अगर battery ख़त्म है, तो car start नहीं होगी।\nCar start हो गई।\nकौन सी बात पक्का सच है?", "c": "Battery ख़त्म नहीं है", "w": ["Battery ख़त्म है", "Car की टंकी full है", "कुछ पक्का नहीं कहा जा सकता"]},
+{"p": "Class 8B के सभी students test में pass हो गए।\nआरव Class 8B में है।\nकौन सी बात पक्का सच है?", "c": "आरव test में pass हुआ", "w": ["आरव के सबसे ज़्यादा marks आए", "आरव class monitor है", "आरव test में fail हुआ"]},
+{"p": "अगर बारिश हुई, तो match cancel हो जाएगा।\nबारिश हो रही है।\nकौन सी बात पक्का सच है?", "c": "Match cancel हो जाएगा", "w": ["Match खेला जाएगा", "बारिश जल्दी रुक जाएगी", "कुछ पक्का नहीं कहा जा सकता"]},
+{"p": "रितु की लंबाई सना से ज़्यादा है।\nसना की लंबाई तारा से ज़्यादा है।\nसबसे कम लंबाई किसकी है?", "c": "तारा", "w": ["रितु", "सना", "पक्का नहीं कहा जा सकता"]},
+{"p": "Platform 2 से जाने वाली हर train पुणे जाती है।\n6:15 वाली train Platform 2 से जा रही है।\nये train कहाँ जा रही है?", "c": "पुणे", "w": ["मुंबई", "नासिक", "पक्का नहीं कहा जा सकता"]},
+{"p": "दुकान की कोई भी बिल्ली सफ़ेद नहीं है।\nमाइलो दुकान की एक बिल्ली है।\nकौन सी बात पक्का सच है?", "c": "माइलो सफ़ेद नहीं है", "w": ["माइलो सफ़ेद है", "माइलो काली है", "माइलो अकेली बिल्ली है"]},
+{"p": "एक थैले में सिर्फ़ लाल और नीले कंचे हैं।\nनिकाला गया कंचा लाल नहीं है।\nउसका रंग क्या है?", "c": "नीला", "w": ["लाल", "हरा", "पक्का नहीं कहा जा सकता"]},
+{"p": "अगर मीना अपना homework पूरा कर ले, तो उसे TV देखने की permission है।\nमीना ने homework पूरा कर लिया।\nकौन सी बात पक्का सच है?", "c": "मीना को TV देखने की permission है", "w": ["मीना अभी TV देख रही है", "मीना को TV पसंद है", "मीना को TV देखने की permission नहीं है"]},
+{"p": "देव की उम्र करण से ज़्यादा है।\nकरण की उम्र Joy से ज़्यादा है।\nकौन सी बात पक्का सच है?", "c": "देव की उम्र Joy से ज़्यादा है", "w": ["Joy की उम्र देव से ज़्यादा है", "देव और Joy की उम्र बराबर है", "करण सबसे बड़ा है"]},
+{"p": "टोकरी के सभी आम पके हुए हैं।\nये फल टोकरी का एक आम है।\nकौन सी बात पक्का सच है?", "c": "ये फल पका हुआ है", "w": ["ये फल कच्चा है", "टोकरी के सारे फल आम हैं", "ये फल सबसे बड़ा है"]},
+{"p": "दुकान हर Sunday बंद रहती है।\nआज Sunday है।\nकौन सी बात पक्की है?", "c": "आज दुकान बंद है", "w": ["आज दुकान खुली है", "दुकान रोज़ बंद रहती है", "दुकान वाला छुट्टी पर है"]},
+{"p": "आख़िरी लड्डू या तो आशा ने खाया या बिलाल ने।\nआशा ने नहीं खाया।\nकिसने खाया?", "c": "बिलाल", "w": ["आशा", "दोनों ने", "किसी ने नहीं"]},
+{"p": "रोहन के पास इमरान से ज़्यादा कंचे हैं।\nइमरान के पास सुनील से ज़्यादा कंचे हैं।\nसबसे कम कंचे किसके पास हैं?", "c": "सुनील", "w": ["रोहन", "इमरान", "पक्का नहीं कहा जा सकता"]},
+{"p": "एक किसान के पास सिर्फ़ गायें और बकरियाँ हैं।\nकुल 12 जानवर हैं, जिनमें 7 गायें हैं।\nउसके पास कितनी बकरियाँ हैं?", "c": "5", "w": ["4", "6", "19"]},
+{"p": "Class के कुछ students cricket खेलते हैं।\nClass के सभी students इसी school के students हैं।\nकौन सी बात पक्का सच है?", "c": "School के कुछ students cricket खेलते हैं", "w": ["School के सभी students cricket खेलते हैं", "School का कोई student cricket नहीं खेलता", "हर cricket खिलाड़ी इसी class में है"]},
+{"p": "Exam Tuesday के अगले दिन है।\nExam किस दिन है?", "c": "Wednesday", "w": ["Thursday", "Monday", "Friday"]},
+{"p": "अनु एक line में खड़ी है।\nउसके आगे 3 लोग हैं और पीछे 2 लोग।\nLine में कुल कितने लोग हैं?", "c": "6", "w": ["5", "7", "4"]},
+{"p": "सभी कौवे काले होते हैं।\nये पक्षी काला नहीं है।\nकौन सी बात पक्का सच है?", "c": "ये पक्षी कौवा नहीं है", "w": ["ये पक्षी कौवा है", "ये पक्षी गौरैया है", "ये पक्षी सफ़ेद है"]},
+{"p": "नेहा का birthday ओम से पहले आता है।\nओम का birthday पिया से पहले आता है।\nसबसे बाद में किसका birthday आता है?", "c": "पिया का", "w": ["नेहा का", "ओम का", "पक्का नहीं कहा जा सकता"]},
+{"p": "Concert की हर ticket पर number है।\nरिया के पास concert की ticket है।\nकौन सी बात पक्का सच है?", "c": "रिया की ticket पर number है", "w": ["रिया की ticket number 1 है", "रिया सबसे आगे बैठेगी", "रिया ने ticket online ख़रीदी"]},
+{"p": "आज Friday है।\nParty दो दिन बाद है।\nParty किस दिन है?", "c": "Sunday", "w": ["Saturday", "Monday", "Tuesday"]},
+{"p": "लाल डब्बा नीले डब्बे से भारी है।\nहरा डब्बा नीले डब्बे से हल्का है।\nसबसे भारी डब्बा कौन सा है?", "c": "लाल डब्बा", "w": ["नीला डब्बा", "हरा डब्बा", "पक्का नहीं कहा जा सकता"]},
+{"p": "लाल button दबाने पर पंखा चल जाता है।\nपंखा नहीं चला।\nकौन सी बात पक्का सच है?", "c": "लाल button नहीं दबाया गया", "w": ["लाल button दबाया गया", "पंखा ख़राब है", "हरा button दबाया गया"]},
+{"p": "School का कोई भी teacher 21 साल से कम उम्र का नहीं है।\nसुनीता इस school में teacher है।\nकौन सी बात पक्का सच है?", "c": "सुनीता की उम्र 21 साल या उससे ज़्यादा है", "w": ["सुनीता ठीक 21 साल की है", "सुनीता 30 से ज़्यादा की है", "सुनीता नई teacher है"]},
+{"p": "अगर light जाती है, तो lift रुक जाती है।\nLift चल रही है।\nकौन सी बात पक्का सच है?", "c": "Light नहीं गई है", "w": ["Light गई है", "Lift नई है", "कुछ पक्का नहीं कहा जा सकता"]},
+{"p": "Cricket team का हर member रोज़ practice करता है।\nमोहित रोज़ practice करता है।\nकौन सी बात पक्का सच है?", "c": "मोहित team में है या नहीं, ये पक्का नहीं कहा जा सकता", "w": ["मोहित team में है", "मोहित captain है", "मोहित team में नहीं है"]},
+{"p": "तीसरी मंज़िल के सभी कमरों में balcony है।\nRoom 305 में balcony नहीं है।\nकौन सी बात पक्का सच है?", "c": "Room 305 तीसरी मंज़िल पर नहीं है", "w": ["Room 305 तीसरी मंज़िल पर है", "Room 305 सबसे छोटा कमरा है", "तीसरी मंज़िल के किसी कमरे में balcony नहीं है"]},
+{"p": "रवि, सैम से तेज़ दौड़ता है।\nटीना, सैम से धीरे दौड़ती है।\nउमा, रवि से तेज़ दौड़ती है।\nसबसे धीरे कौन दौड़ता है?", "c": "टीना", "w": ["सैम", "रवि", "उमा"]},
+{"p": "या तो bus late है या रास्ता बंद है, लेकिन दोनों एक साथ नहीं।\nरास्ता बंद नहीं है।\nकौन सी बात पक्का सच है?", "c": "Bus late है", "w": ["Bus time पर है", "दोनों बातें सच हैं", "कुछ पक्का नहीं कहा जा सकता"]},
+{"p": "Library की कुछ किताबें novel हैं।\nLibrary के सभी novel fiction हैं।\nकौन सी बात पक्का सच है?", "c": "Library की कुछ किताबें fiction हैं", "w": ["Library की सभी किताबें fiction हैं", "Library का कोई novel fiction नहीं है", "Library की सारी fiction novel ही है"]},
+{"p": "आशा, बिमल और चित्रा एक line में बैठे हैं।\nआशा किसी भी किनारे पर नहीं है।\nबिमल, आशा के बाएँ (left) बैठा है।\nसबसे दायें (right) किनारे पर कौन है?", "c": "चित्रा", "w": ["आशा", "बिमल", "पक्का नहीं कहा जा सकता"]},
+{"p": "एक डब्बे में 5 मिठाइयाँ हैं, हर एक या तो लड्डू है या बर्फ़ी।\nइनमें से कोई भी लड्डू नहीं है।\nकौन सी बात पक्का सच है?", "c": "पाँचों मिठाइयाँ बर्फ़ी हैं", "w": ["कुछ मिठाइयाँ लड्डू हैं", "डब्बे में 3 बर्फ़ी हैं", "पक्का नहीं कहा जा सकता"]},
+{"p": "एक bakery सिर्फ़ bread, cake और biscuit बेचती है।\nसविता ने ऐसी चीज़ ख़रीदी जो न bread है, न cake।\nउसने क्या ख़रीदा?", "c": "Biscuit", "w": ["Bread", "Cake", "पक्का नहीं कहा जा सकता"]},
+{"p": "किरण, लीला का cousin है।\nलीला, मोहन की बहन है।\nकौन सी बात पक्का सच है?", "c": "किरण, मोहन का भी cousin है", "w": ["किरण, मोहन का भाई है", "किरण, लीला की बहन है", "मोहन, लीला का cousin है"]},
+{"p": "किसी महीने की 5 तारीख़ को Monday है।\nउसी महीने की 12 तारीख़ को कौन सा दिन होगा?", "c": "Monday", "w": ["Sunday", "Tuesday", "Saturday"]},
+{"p": "पूजा की उम्र अपने भाई अरुण से दुगनी है।\nअरुण 8 साल का है।\n4 साल बाद पूजा कितने साल की होगी?", "c": "20", "w": ["16", "12", "24"]},
+{"p": "Chess club के सभी members इसी school के students हैं।\nSchool के कुछ students music club में हैं।\nकौन सी बात पक्का सच है?", "c": "ये पक्का नहीं है कि chess club का कोई member music club में है", "w": ["Chess club के कुछ members music club में हैं", "Chess club का कोई member music club में नहीं है", "Music club के सभी members chess club में हैं"]},
+{"p": "अगर किसी student के 90 से ज़्यादा marks आते हैं, तो उसे medal मिलता है।\nगीता को medal मिला।\nकौन सी बात पक्का सच है?", "c": "गीता के 90 से ज़्यादा आए या नहीं, ये पक्का नहीं कहा जा सकता", "w": ["गीता के 90 से ज़्यादा marks आए", "गीता के 90 से कम marks आए", "सिर्फ़ गीता को medal मिला"]},
+{"p": "Stadium में सिर्फ़ pass वाले लोग ही जा सकते हैं।\nयश के पास pass नहीं है।\nकौन सी बात पक्का सच है?", "c": "यश stadium में नहीं जा सकता", "w": ["यश stadium में जा सकता है", "यश का pass खो गया", "यश ticket बेचता है"]},
+{"p": "एक घड़ी हर घंटे 5 minute आगे हो जाती है।\nदोपहर 12:00 बजे उसे सही time पर set किया गया।\nजब असली time 3:00 बजे (दोपहर) होगा, तब घड़ी क्या time दिखाएगी?", "c": "3:15", "w": ["3:05", "3:10", "3:20"]},
+{"p": "पाँच दोस्त एक line में बैठे हैं।\nरीना सबसे बाएँ (left) किनारे पर है।\nसिड, रीना के बगल में है।\nतेज, सिड और उमा के बीच में है।\nवाणी सबसे दायें (right) किनारे पर है।\nबीच में कौन बैठा है?", "c": "तेज", "w": ["सिड", "उमा", "वाणी"]},
+{"p": "एक द्वीप पर 'सच्चे' लोग हमेशा सच बोलते हैं और 'झूठे' लोग हमेशा झूठ।\nA कहता है: “B झूठा है।”\nB कहता है: “A और मैं, दोनों सच्चे हैं।”\nA और B कौन हैं?", "c": "A सच्चा है और B झूठा", "w": ["दोनों सच्चे हैं", "दोनों झूठे हैं", "A झूठा है और B सच्चा"]},
+{"p": "तीन डब्बों पर label हैं: सेब, संतरे और Mixed। लेकिन हर label ग़लत है।\nआप 'Mixed' label वाले डब्बे से एक फल निकालते हो, और वो सेब है।\n'Mixed' label वाले डब्बे में क्या है?", "c": "सिर्फ़ सेब", "w": ["सिर्फ़ संतरे", "Mixed फल", "पक्का नहीं कहा जा सकता"]},
+{"p": "एक code में हर English letter को alphabet में उससे दो जगह आगे वाले letter से बदला जाता है।\nCAT को ECV लिखा जाता है।\nZEBRA को कैसे लिखेंगे?", "c": "BGDTC", "w": ["CGDTC", "BGDTB", "XCZPY"]},
+{"p": "A, B के पिता हैं।\nB, C की बहन है।\nC, D की माँ है।\nA का D से क्या रिश्ता है?", "c": "नाना", "w": ["पिता", "मामा", "परदादा"]},
+{"p": "प्रिया, रवि की बेटी है।\nरवि, सुनील का भाई है।\nसुनील की पत्नी कविता है।\nप्रिया का कविता से क्या रिश्ता है?", "c": "भतीजी", "w": ["बेटी", "बहन", "Cousin"]},
+{"p": "अगर मीरा पढ़ाई करती है, तो वो pass होती है।\nअगर वो pass होती है, तो उसके मम्मी-पापा खुश होते हैं।\nउसके मम्मी-पापा खुश नहीं हैं।\nमीरा ने पढ़ाई की या नहीं, इसके बारे में क्या कहा जा सकता है?", "c": "उसने पढ़ाई नहीं की", "w": ["उसने पढ़ाई की", "उसने पढ़ाई की लेकिन fail हो गई", "कुछ पक्का नहीं कहा जा सकता"]},
+{"p": "चार runners race पूरी करते हैं।\nअजय, बेला से पहले लेकिन चंदू के बाद पहुंचता है।\nदिनेश, बेला के बाद पहुंचता है।\nदूसरे number पर कौन आता है?", "c": "अजय", "w": ["चंदू", "बेला", "दिनेश"]},
+{"p": "Team के सभी programmers logical हैं।\nकुछ logical लोग musician हैं।\nकोई भी musician कभी late नहीं होता।\nकौन सी बात पक्का सच है?", "c": "कुछ logical लोग कभी late नहीं होते", "w": ["सभी programmers musician हैं", "कोई भी programmer कभी late नहीं होता", "कुछ programmers musician हैं"]},
+{"p": "इन तीन बातों में से ठीक एक बात सच है।\n(i) ख़ज़ाना लाल डब्बे में है।\n(ii) ख़ज़ाना लाल डब्बे में नहीं है।\n(iii) ख़ज़ाना नीले डब्बे में है।\nइससे क्या पता चलता है?", "c": "ख़ज़ाना नीले डब्बे में नहीं है", "w": ["ख़ज़ाना लाल डब्बे में है", "ख़ज़ाना नीले डब्बे में है", "ख़ज़ाना लाल डब्बे में नहीं है"]},
+{"p": "एक पिता अपने बेटे से 30 साल बड़े हैं।\n5 साल बाद उनकी उम्र बेटे की उम्र की तीन गुना होगी।\nबेटा अभी कितने साल का है?", "c": "10", "w": ["5", "15", "20"]},
+{"p": "40 लोगों के एक group में 25 लोग हिंदी बोलते हैं और 20 लोग English।\n5 लोग इन दोनों में से कोई भाषा नहीं बोलते।\nकितने लोग दोनों भाषाएँ बोलते हैं?", "c": "10", "w": ["5", "15", "20"]},
+{"p": "A, B और C में से हर कोई या तो हमेशा सच बोलता है या हमेशा झूठ।\nA कहता है: “B हमेशा झूठ बोलता है।”\nB कहता है: “C हमेशा झूठ बोलता है।”\nC कहता है: “A और B दोनों हमेशा झूठ बोलते हैं।”\nसच कौन बोलता है?", "c": "सिर्फ़ B", "w": ["सिर्फ़ A", "सिर्फ़ C", "A और B"]},
+{"p": "लगातार पाँच odd numbers का जोड़ 75 है।\nइनमें सबसे बड़ा number कौन सा है?", "c": "19", "w": ["17", "21", "23"]},
+{"p": "आज Thursday है।\nआज से 100 दिन बाद कौन सा दिन होगा?", "c": "Saturday", "w": ["Friday", "Sunday", "Thursday"]},
+{"p": "एक आदमी की तरफ़ इशारा करके नीना कहती है, “इसकी माँ मेरी माँ की इकलौती बेटी है।”\nउस आदमी का नीना से क्या रिश्ता है?", "c": "उसका बेटा", "w": ["उसका भाई", "उसका भतीजा", "उसके पिता"]},
+{"p": "कोई भी ईमानदार इंसान झूठ नहीं बोलता।\nकुछ politicians झूठ बोलते हैं।\nकौन सी बात पक्का सच है?", "c": "कुछ politicians ईमानदार नहीं हैं", "w": ["कोई भी politician ईमानदार नहीं है", "सभी politicians झूठ बोलते हैं", "कुछ ईमानदार लोग politician हैं"]},
+{"p": "अंकित, भव्या और चेतन में से हर कोई चाय, coffee या juice में से एक चीज़ पीता है, और तीनों अलग-अलग चीज़ पीते हैं।\nअंकित चाय नहीं पीता।\nभव्या चाय पीती है।\nचेतन coffee नहीं पीता।\nअंकित क्या पीता है?", "c": "Coffee", "w": ["चाय", "Juice", "पक्का नहीं कहा जा सकता"]}
+],
+"perceive": [
+["दिवाली की तैयारी के बीच रोहन की चाची एक छोटी सी ग़लती पर उसे डाँट देती हैं। रोहन नज़रें नीचे कर लेता है, कंधे अकड़ जाते हैं और बहुत धीरे से “sorry” कहता है।", "Hurt (दिल दुखना)", "मज़ा आना", "गर्व", "Bore होना"],
+["स्नेहा board exam का result page खोलती है, एकदम चुप हो जाती है, फिर लंबी साँस छोड़ती है और उसके चेहरे पर मुस्कान आ जाती है।", "राहत", "गुस्सा", "घिन", "जलन"],
+["जब माया को पता चलता है कि team select नहीं हुई, उसके कंधे झुक जाते हैं और आवाज़ धीमी हो जाती है। वो ज़मीन की तरफ़ ही देखती रहती है।", "निराशा", "Excitement", "मज़ा आना", "गर्व"],
+["Exam office से ख़बर सुनते ही लियो उछल पड़ता है, खुल कर मुस्कुराता है और जल्दी-जल्दी बातें करने लगता है।", "बहुत ज़्यादा खुशी", "घिन", "Bore होना", "Guilt"],
+["तीसरी बार बीच में टोके जाने पर एना की भौहें तन जाती हैं, जबड़ा कस जाता है और वो छोटे-छोटे, रूखे जवाब देने लगती है।", "चिड़चिड़ाहट", "राहत", "Curiosity", "शर्मिंदगी"],
+["Interview से पहले टॉम दो बार दरवाज़ा check करता है, उसकी साँस तेज़ चल रही है और वो बार-बार घड़ी देख रहा है।", "घबराहट (anxiety)", "संतोष", "तिरस्कार (नीचा समझना)", "गर्व"],
+["सबके सामने एक colleague को ग़लत नाम से बुलाने के बाद प्रिया के गाल लाल हो जाते हैं और वो नज़र फेर लेती है।", "शर्मिंदगी", "गुस्सा", "जलन", "Bore होना"],
+["खाने की smell लेते ही सैम नाक सिकोड़ता है और plate दूर खिसका देता है।", "घिन", "हैरानी", "उदासी", "गर्व"],
+["पीछे से दरवाज़ा अचानक खुलता है तो ईवा की आंखें फैल जाती हैं और वो झटके से पीछे हट जाती है।", "चौंक जाना", "संतोष", "तिरस्कार (नीचा समझना)", "Bore होना"],
+["राज ढीला पड़कर बैठा रहता है, एक-एक शब्द में जवाब देता है और उन शौक़ों में भी कोई interest नहीं दिखाता जो उसे पहले बहुत पसंद थे।", "Low mood (मन उदास रहना)", "Excitement", "चिड़चिड़ाहट", "गर्व"],
+["जो promotion क्लोई चाहती थी, वो एक colleague को मिल जाता है। क्लोई ज़बरदस्ती मुस्कुराती है और डाँट पीसते हुए बधाई देती है।", "जलन", "शुक्रगुज़ारी", "शांत गर्व", "राहत"],
+["एक अंजान इंसान का सामान सीढ़ियों से ऊपर चढ़वाने के बाद काई थोड़ा सीधा खड़ा होता है और चुपचाप मुस्कुराता है।", "मन का सुकून (satisfaction)", "नाराज़गी", "डर", "घिन"],
+["रात को नीना एक बहस को बार-बार याद करती है, सिर हिलाती है और बड़बड़ाती है, “मुझे कुछ और कहना चाहिए था।”", "पछतावा", "गर्व", "मज़ा आना", "हैरानी"],
+["Railway station पर फ़रहान देखता है कि उसका भाई दो साल विदेश में रहने के बाद train से उतर रहा है। फ़रहान बड़ी सी मुस्कान और खुले हाथों के साथ आगे दौड़ता है।", "खुशी", "गुस्सा", "Bore होना", "डर"],
+["काव्या को पता चलता है कि उसका तोता उड़ गया और वापस नहीं आया। उसकी आंखें भर आती हैं और वो चुपचाप खिड़की के पास बैठ जाती है।", "उदासी", "खुशी", "गर्व", "घिन"],
+["अर्जुन की team एक run से हार गई। वो जीतने वालों के लिए तमीज़ से ताली बजाता है, लेकिन उसका जबड़ा कसा हुआ है और जाते वक़्त वो ज़मीन को घूरता रहता है।", "निराशा", "गर्व", "तिरस्कार (नीचा समझना)", "मज़ा आना"],
+["Mrs अय्यर देखती हैं कि पड़ोसियों ने फिर से उनके gate के बाहर कूदा डाल दिया है। उनकी आवाज़ ऊँची हो जाती है और वो कचरे की तरफ़ इशारा करके तेज़ आवाज़ में बोलती हैं।", "गुस्सा", "शर्मिंदगी", "राहत", "उदासी"],
+["बिना को अभी बताया गया है कि अगले महीने उसकी दुकान खाली करनी पड़ेगी। वो काँपती आवाज़ में बार-बार पूछती है, “अब हमारा क्या होगा?” और अपना दुपट्टा मरोड़ती रहती है।", "चिंता", "गर्व", "मज़ा आना", "घिन"],
+["हफ़्तों की मेहनत के बाद संजना के science model को first prize मिलता है। वो stage पर सीधी खड़ी मुस्कुरा रही है और उसके मम्मी-पापा ज़ोर से ताली बजा रहे हैं।", "गर्व", "शर्म", "डर", "जलन"],
+["एक लंबी line में एक अंजान आदमी बिना कुछ कहे इमरान से आगे घुस जाता है। इमरान का चेहरा सख़्त हो जाता है, वो हाथ बांध लेता है और ठंडी आवाज़ में कहता है, “Excuse me।”", "नाराज़गी (annoyance)", "खुशी", "शर्मिंदगी", "उदासी"],
+["पूजा को अपनी दादी की एक पुरानी photo मिलती है। वो उसे सीने से लगाती है, हल्का सा मुस्कुराती है और उसकी आंखें नम हो जाती हैं।", "पुरानी यादों में खोना (nostalgia)", "घिन", "गुस्सा", "जलन"],
+["देव ने अपने दोस्त को test में cheating करते देखा और कुछ नहीं कहा। बाद में वो दोस्त से नज़रें चुराता है और बार-बार आहें भरता है।", "Guilt (अपनी ग़लती का एहसास)", "गर्व", "मज़ा आना", "संतोष"],
+["नीरज gate के पास school के bully को देखता है। वो धीरे हो जाता है, निकलने का दूसरा रास्ता ढूंढता है और दीवार से सट कर चलता है।", "अंदेशा (कुछ बुरा होने का डर)", "गर्व", "मज़ा आना", "राहत"],
+["चौथी rejection letter के बाद कबीर उसे आराम से मोड़ता है, आह भरता है और कहता है, “चलो, हो गया,” बिना किसी गुस्से या हैरानी के।", "हार मान लीना (resignation)", "Excitement", "भयंकर गुस्सा", "गर्व"],
+["जब नया intern अपना idea समझाता है, Mr कपूर हल्का सा व्यंग्य भरा मुस्कुराते हैं, एक भौह उठाते हैं और बाकी लोगों की तरफ़ ऐसे देखते हैं जैसे idea उनके level का ही नहीं।", "तिरस्कार (नीचा समझना)", "तारीफ़", "घबराहट (anxiety)", "उदासी"],
+["पहली बार सुबह-सुबह ताज महल देखकर ईशान एकदम चुप हो जाता है, उसका मुँह थोड़ा खुला रह जाता है और वो बिना हिले ऊपर देखता रहता है।", "विस्मय (awe)", "Bore होना", "घिन", "चिड़चिड़ाहट"],
+["अंजलि एक party की photos scroll करती है जिसमें उसके दोस्त थे, पर उसे बुलाया नहीं गया था। फिर वो phone उल्टा रख देती है और छत को घूरती रहती है।", "अकेलापन", "गर्व", "मज़ा आना", "राहत"],
+["Mr राव notice करते हैं कि उनका दुकान वाला बार-बार drawer की तरफ़ देखता है और ग़ायब पैसों के बारे में गोल-मोल जवाब देता है। Mr राव आंखें सिकोड़ते हैं और उसके हाथों पर नज़र रखने लगते हैं।", "शक", "शुक्रगुज़ारी", "मज़ा आना", "गर्व"],
+["तारा ने music school में application भेजी है और हर कुछ minute में email check करती है। हर बार खाली inbox देखकर भी वो थोड़ा मुस्कुरा देती है।", "उम्मीद", "घिन", "नाराज़गी", "Bore होना"],
+["शीतल instructions तीन बार पढ़ती है, सिर थोड़ा तिरछा करती है और कहती है, “लेकिन step 3 और step 5 तो एक-दूसरे के उलट हैं।”", "Confusion (उलझन)", "गुस्सा", "गर्व", "खुशी"]
+],
+"understand": [
+["हैरानी और उदासी मिलकर कौन सी feeling बनती है?", "निराशा", "Optimism (अच्छा होने की उम्मीद)", "तिरस्कार (नीचा समझना)", "विस्मय (awe)"],
+["डर और हैरानी मिलकर कौन सी feeling बनती है?", "विस्मय (awe)", "पछतावा", "तिरस्कार (नीचा समझना)", "Optimism (अच्छा होने की उम्मीद)"],
+["गुस्सा और घिन मिलकर कौन सी feeling बनती है?", "तिरस्कार (नीचा समझना)", "विस्मय (awe)", "निराशा", "प्यार"],
+["उदासी और घिन मिलकर कौन सी feeling बनती है?", "पछतावा", "विस्मय (awe)", "Optimism (अच्छा होने की उम्मीद)", "प्यार"],
+["खुशी और भरोसा मिलकर सबसे ज़्यादा किस feeling जैसा है?", "प्यार", "तिरस्कार (नीचा समझना)", "पछतावा", "विस्मय (awe)"],
+["अगर चिड़चिड़ाहट को लंबे time तक सँभाला न जाए, तो वो सबसे ज़्यादा किस चीज़ में बदल सकती है?", "भयंकर गुस्सा", "संतोष", "Bore होना", "Curiosity"],
+["इनमें से डर का सबसे तेज़ (intense) रूप कौन सा है?", "दहशत", "फ़िक्र", "बेचैनी", "Nervousness"],
+["इनमें से उदासी का सबसे गहरा रूप कौन सा है?", "गहरा शोक (grief)", "खोया-खोया रहना", "निराशा", "Bore होना"],
+["डैनी ने किसी event की महीनों तैयारी की, और फिर वो cancel हो गया। उसके मन में कौन सी दो feelings आने की सबसे ज़्यादा संभावना है?", "निराशा और frustration", "गर्व और राहत", "मज़ा और सुकून", "जलन और खुशी"],
+["मीरा को पता चलता है कि उसकी close friend अपनी dream job के लिए विदेश जा रही है। मीरा के मन में कौन सी feelings का मेल सबसे ज़्यादा संभव है?", "दोस्त के लिए खुशी और अपने लिए उदासी", "घिन और गर्व", "गुस्सा और मज़ा", "Bore होना और विस्मय"],
+["इनमें से गुस्से का सबसे हल्का रूप कौन सा है?", "नाराज़गी (annoyance)", "भयंकर गुस्सा", "आग-बबूला होना", "दुश्मनी"],
+["इनमें से खुशी का सबसे तेज़ रूप कौन सा है?", "परमानंद (ecstasy)", "सुकून", "अच्छा लगना", "संतोष"],
+["दूर रहने वाले किसी अपने की याद में उदास होना, इसे सबसे सही क्या कहेंगे?", "किसी की कमी महसूस करना (longing)", "घिन", "गर्व", "मज़ा आना"],
+["कौन सी feeling इंसान को ख़तरे से दूर हटने के लिए push करती है?", "डर", "गर्व", "खुशी", "Bore होना"],
+["कौन सी feeling इस एहसास से सबसे ज़्यादा जुड़ी है कि आपने कुछ ग़लत किया है?", "Guilt (अपनी ग़लती का एहसास)", "गर्व", "हैरानी", "मज़ा आना"],
+["राहुल promotion से खुश है और पुरानी team छोड़ने से उदास भी। इस मिली-जुली feeling को सबसे सही क्या कहेंगे?", "खट्टा-मीठा एहसास (bittersweet)", "तिरस्कार (नीचा समझना)", "घिन", "Bore होना"],
+["किसी को family function से पहले घबराहट होती है क्योंकि उसे लगता है लोग उसे judge करेंगे। इस feeling के पीछे सबसे ज़्यादा कौन सा विचार होगा?", "“लोग मुझे judge करेंगे या मेरी बेइज़्ज़ती होगी।”", "“सब कुछ एकदम perfect होगा।”", "“मैं पहले ही जीत चुका/चुकी हूँ।”", "“मुझे फ़र्क नहीं पड़ता कोई क्या सोचे।”"],
+["जो नुक़सान आपको लगता है कि ताला जा सकता था, उसके बाद अक्सर कौन सी feeling आती है?", "Frustration", "संतोष", "सुकून", "मज़ा आना"],
+["जिस इंसान को सबके सामने ग़लत तरीक़े से blame किया गया हो, उसके मन में कौन सी दो feelings सबसे ज़्यादा संभव हैं?", "गुस्सा और hurt", "गर्व और मज़ा", "सुकून और राहत", "Bore होना और curiosity"],
+["खुशी और हैरानी मिलकर कौन सी feeling बनती है?", "ख़ुशनुमा हैरानी (delight)", "तिरस्कार (नीचा समझना)", "पछतावा", "जलन"],
+["इंतज़ार (anticipation) और खुशी मिलकर कौन सी feeling बनती है?", "Optimism (अच्छा होने की उम्मीद)", "तिरस्कार (नीचा समझना)", "पछतावा", "निराशा"],
+["डर और उदासी मिलकर कौन सी feeling बनती है?", "मायूसी (despair)", "विस्मय (awe)", "प्यार", "गर्व"],
+["अपनी feelings को सही-सही नाम देना, जैसे सिर्फ़ “बुरा लग रहा है” की जगह “anxious feel हो रहा है”, इसे emotional granularity कहते हैं। इसका सबसे बड़ा फ़ायदा क्या है?", "इससे feeling के हिसाब से सही तरीक़ा चुनने में मदद मिलती है", "इससे feelings ग़ायब हो जाती हैं", "इससे दूसरे लोग आपकी feelings notice नहीं करते", "इससे feelings और तेज़ हो जाती हैं"],
+["किसी stressful situation को “ख़तरा नहीं, एक challenge” की तरह देखना किसका example है?", "Situation को नई नज़र से देखना (reappraisal)", "Feeling को दबाना (suppression)", "Situation से बचना (avoidance)", "एक ही बात को बार-बार सोचते रहना (rumination)"],
+["इनमें से feeling को दबाने (suppression) का सबसे सही example कौन सा है?", "परेशान होते हुए भी मुस्कुराकर कहना “मैं ठीक हूँ”", "Problem पर शांति से बात करना", "Problem को नए angle से देखना", "जवाब देने से पहले धीरे-धीरे साँस लीना"]
+],
+"manage": [
+{"s": "आपके मम्मी-पापा चाहते हैं कि आप ऐसा course लो जिसमें आपका interest नहीं है, और घर पर बात गरम होती जा रही है। सबसे अच्छा तरीक़ा क्या है?", "o": ["अभी बात रोक दो, फिर सही time पर शांति से अपनी वजह समझाओ और उनकी चिंता भी सुनो", "अभी घर का माहौल ठीक रखने के लिए हाँ बोल दो, बाद में सोचेंगे", "तब तक बहस करते रहो जब तक वो मान न जाएँ", "जब तक वो अपना मन न बदलें, उनसे बात करना बंद कर दो"]},
+{"s": "आपके दोस्त एक महँगा trip plan कर रहे हैं जो आपके budget से बाहर है। सबसे अच्छा response क्या है?", "o": ["अपने budget के बारे में साफ़-साफ़ बता दो और ऐसा option suggest करो जो सबके लिए ठीक हो", "बिना कुछ बताए चुपचाप trip skip कर दो", "ऐसा उधार ले लो जो आसानी से चुका न सको, ताकि पीछे न छूट जाओ", "सबको बोल दो कि ये plan बेकार है"]},
+{"s": "एक colleague पूरी team के सामने आपके काम की बुराई करता है, और आपका चेहरा गरम होने लगता है। सबसे सही response क्या है?", "o": ["शांत रहो, उनकी बात मानो और कहो कि details बाद में discuss कर लेते हैं", "उसी वक़्त तमीज़ से अपने काम का बचाव करो और meeting आगे बढ़ाओ", "कुछ मत बोलो, और पूरे हफ़्ते उनसे बचते रहो", "हिसाब बराबर करने के लिए उनके काम की भी कोई ग़लती गिना दो"]},
+{"s": "एक दोस्त important exam में fail होने के बाद परेशान है और बात करना चाहता है। मदद करने का सबसे अच्छा तरीक़ा क्या है?", "o": ["ध्यान से सुनो, मानो कि ये सच में बुरा लगता है, और पूछो कि क्या चीज़ मदद करेगी", "तुरंत revision tips और दोबारा exam देने का plan बता दो", "कहो कि ये कोई बड़ी बात नहीं, खुश हो जाओ", "ध्यान बताने के लिए कोई मज़ेदार topic छेद दो"]},
+{"s": "एक ही हफ़्ते में तीन deadlines हैं और आप overwhelmed feel कर रहे हो। सबसे सही कदम क्या है?", "o": ["सारे काम list करो, urgency के हिसाब से order बनाओ, और जो न हो पाए उसके लिए मदद या extra time माँगो", "सब ख़त्म होने तक रोज़ देर रात तक काम करो", "पहले आसान काम करो और उम्मीद रखो कि बाकी अपने आप हो जाएगा", "Stress को ignore करो और normal तरीक़े से चलते रहो"]},
+{"s": "Team का एक member बार-बार late आता है और इससे पूरे group पर असर पड़ रहा है। सबसे अच्छा तरीक़ा क्या है?", "o": ["उनसे अकेले में बात करो, बताओ कि इससे क्या असर पड़ रहा है, और पूछो कि कोई परेशानी तो नहीं", "Group chat में पूरी team को punctuality याद दिलाओ", "Team के दूसरे लोगों से उनकी शिकायत करो", "चुपचाप उनका काम सँभालते रहो और कुछ मत बोलो"]},
+{"s": "भाई या बहन से झगड़े के घंटों बाद भी आपको गुस्सा आ रहा है। सबसे helpful क्या रहेगा?", "o": ["थोड़ा time लेकर शांत हो जाओ, फिर आराम से बात करो कि किस बात से बुरा लगा", "किसी और काम में मन लगा लो और उम्मीद करो कि गुस्सा उतर जाएगा", "एक तीखा message भेज दो ताकि उन्हें पता चले आप क्या feel कर रहे हो", "जब तक वो sorry न बोलें, उनसे बात ही मत करो"]},
+{"s": "आपको job offer मिला है और आप एक साथ excited और nervous दोनों feel कर रहे हो। इसे सँभालने का सबसे समझदार तरीक़ा क्या है?", "o": ["दोनों feelings को मानो, फिर decision से पहले फ़ायदे और नुक़सान तोलो", "Excitement के साथ चलो और nervousness को ignore करो", "Nervousness ख़त्म करने के लिए offer मना कर दो", "जितना हो सके जवाब देने में देर करो"]},
+{"s": "एक colleague कुछ दिनों से चुप-चुप है और बिना किसी साफ़ वजह के आप पर भड़क गया। सबसे अच्छा response क्या है?", "o": ["शांत रहो, इसे personally मत लो, और बाद में जब वो ठीक हों तब प्यार से हाल पूछ लो", "पूरी तरह ignore करो और normal तरीक़े से चलते रहो", "उल्टा जवाब दो ताकि उन्हें पता चले कि ये ठीक नहीं", "दूसरों को बताओ कि वो कितना परेशान कर रहे हैं"]},
+{"s": "आपको एक ऐसा email आता है जिससे आपको बहुत गुस्सा आ जाता है। सबसे सही कदम क्या है?", "o": ["जवाब देने से पहले रुको, शांत जवाब लिखो, और भेजने से पहले एक बार दोबारा पढ़ लो", "तुरंत जवाब दो, लेकिन छोटा और सिर्फ़ facts वाला", "तुरंत जवाब दो और जो भी मन में है सब लिख दो", "गुस्सा निकालने के लिए email दूसरों को forward कर दो"]},
+{"s": "आपको एक बड़े group के सामने presentation देनी है और हाथ काँप रहे हैं। सबसे ज़्यादा क्या मदद करेगा?", "o": ["साँस धीमी करो, खुद को याद दिलाओ कि आपने तैयारी की है, और अपने पहले sentence पर ध्यान दो", "Time आने तक बार-बार notes पढ़ते रहो", "Organiser को बोल दो कि तबियत ख़राब है और हट जाओ", "खुद को पहले से मान लो कि fail होगे, ताकि बाद में बुरा न लगे"]},
+{"s": "आपके manager ने आपको उस काम का credit दे दिया जो आपके teammate ने किया था। सबसे सही क्या है?", "o": ["उन्हें thank you बोलो और ध्यान रखो कि teammate के काम को भी पहचान मिले", "अभी कुछ मत बोलो, लेकिन teammate को अकेले में thank you बोल दो", "चुपचाप तारीफ़ ले लो", "Teammate से कहो कि अपनी बात खुद रखे"]},
+{"s": "Family function में आपका छोटा cousin आपके नए कुर्ते पर चाय गिरा देता है और बहुत डर जाता है। सबसे अच्छा response क्या है?", "o": ["उसे तसल्ली दो कि ग़लती हो जाती है, और चुपचाप साफ़ कर लो", "कहो कि कोई बात नहीं, लेकिन पूरी शाम मुँह फुलाए रहो", "डाँटो ताकि अगली बार ध्यान रखे", "उसके मम्मी-पापा से कुर्ते के पैसे माँगो"]},
+{"s": "आप traffic में फँसे हो, दोस्त की शादी में late पहुंचोगे, और गुस्सा बढ़ रहा है। सबसे अच्छा क्या करना है?", "o": ["कुछ धीमी साँसें लो, दोस्त को message करो कि late होगा, और इस time को शांत होने में लगाओ", "ध्यान बताने के लिए music लगा लो और किसी को मत बताओ", "गाड़ियाँ हटाने के लिए बार-बार horn बजाओ", "आगे वाले driver को दोष दो और उस पर चिल्लाओ"]},
+{"s": "Class में ग़लत जवाब देने पर एक classmate हंस देता है और आपको शर्मिंदगी होती है। सबसे सही response क्या है?", "o": ["एक साँस लो, मुस्कुराओ, कहो कि सही जवाब check कर लोगे, और आगे बढ़ो", "बाकी class में चुप रहो", "हंस कर ताल दो, लेकिन बाद में बदला लेने का सोचो", "सबके सामने ज़ोर से उन्हें डाँटो"]},
+{"s": "एक दोस्त लगातार तीसरी बार आपके साथ का plan cancel करता है, और आपको बुरा लगता है। सबसे अच्छा तरीक़ा क्या है?", "o": ["शांति से बताओ कि आपको बुरा लगा, और पूछो कि सब ठीक तो है", "कहो कि कोई बात नहीं, लेकिन उन्हें बुलाना बंद कर दो", "अपनी बात जताने के लिए ताना मारता message भेजो", "सबक सिखाने के लिए अगली बार आप cancel कर दो"]},
+{"s": "एक important call से ठीक पहले phone की battery ख़त्म हो जाती है, और आप बहुत frustrate हो। सबसे helpful response क्या है?", "o": ["आराम से charger ढूंढो या किसी का phone ले लो, और सामने वाले को देर की वजह बता दो", "Call छोड़ दो और उम्मीद करो कि वो समझ जाएंगे", "ज़ोर-ज़ोर से शिकायत करो कि किस्मत कितनी ख़राब है", "Charge न करने के लिए घर के किसी member को दोष दो"]},
+{"s": "Important test में उम्मीद से कम marks आए। सबसे constructive response क्या है?", "o": ["खुद को निराश होने दो, फिर अपनी ग़लतियाँ देखो और पढ़ाई का plan बनाओ", "खुद से कहो कि फ़र्क नहीं पड़ता और ग़लतियाँ देखे बिना आगे बढ़ जाओ", "मान लो कि ये subject आपके बस का नहीं और कोशिश छोड़ दो", "इसके बारे में किसी से बात मत करो"]},
+{"s": "पड़ोसी रात को देर तक तेज़ music बजाते हैं जब आप सोने की कोशिश कर रहे होते हो। इसे सँभालने का सबसे अच्छा तरीक़ा क्या है?", "o": ["तमीज़ से आवाज़ कम करने को कहो, और बताओ कि आपको आराम चाहिए", "Earplugs लगा लो, कुछ मत बोलो, और हर रात चिढ़ते रहो", "बार-बार दीवार ठोको", "जवाब में अपना music भी तेज़ बजा दो"]},
+{"s": "Manager last minute पर deadline बदल देता है और आपको लगता है कि आपसे पूछा तक नहीं गया। सबसे अच्छा response क्या है?", "o": ["शांति से वजह पूछो, बताओ कि इस बदलाव का क्या असर पड़ेगा, और एक practical plan suggest करो", "बिना कुछ कहे मान लो और मन में नाराज़ होकर देर तक काम करो", "नई deadline सीधा मना कर दो", "अपनी बात जताने के लिए जान-बूझकर deadline miss कर दो"]},
+{"s": "एक दोस्त ने आपको अपना राज़ बताया। बाद में पता चलता है कि उस पर बातें हो रही हैं, और दोस्त को आप पर शक है। सबसे अच्छा response क्या है?", "o": ["शांति से कहो कि आपने नहीं बताया, उनकी चिंता समझो, और ये पता लगाने में मदद offer करो कि बात कैसे फैली", "कुछ मत बोलो और शक को अपने आप ख़त्म होने दो", "गुस्सा हो जाओ और कहो कि उन्हें आप पर इल्ज़ाम लगाने का कोई हक़ नहीं", "बिना सबूत किसी दूसरे दोस्त को दोष दे दो"]},
+{"s": "Team की presentation अच्छी नहीं गई और एक teammate आपको blame करता है। आप defensive feel कर रहे हो। सबसे अच्छा response क्या है?", "o": ["उनकी बात सुनो, अपनी ग़लती का हिस्सा मानो, और suggest करो कि अगली बार team क्या बदल सकती है", "मान लो कि सारी ग़लती सिर्फ़ आपकी थी", "जवाब में उनकी सारी ग़लतियाँ गिना दो", "चुप रहो और बाद में उनसे बचते रहो"]},
+{"s": "Family gathering में एक रिश्तेदार बार-बार आपके career choices पर comment करते हैं और आपको चिढ़ हो रही है। सबसे अच्छा जवाब क्या है?", "o": ["शांत रहो, उनकी फ़िक्र के लिए thank you बोलो, और कहो कि आपने सोच-समझ कर फ़ैसला किया है", "Topic बदल दो और बाकी शाम उनसे बचते रहो", "तीखे अंदाज़ में कहो कि अपने काम से काम रखें", "तब तक बहस करो जब तक वो चुप न हो जाएँ"]},
+{"s": "लंबे हफ़्ते के बाद आप बहुत थके हो, लेकिन एक दोस्त किसी important काम में मदद माँगता है। सबसे समझदार response क्या है?", "o": ["ईमानदारी से बताओ कि आप थके हो, और ऐसा time बताओ जब ठीक से मदद कर सको, या अभी कोई छोटी मदद offer करो", "हाँ बोल दो, फिर मन मार कर आधा-अधूरा काम करो", "बिना वजह बताए मना कर दो और phone बंद कर दो", "ऐसे दिखाओ जैसे message देखा ही नहीं"]},
+{"s": "Close friend के साथ तेज़ बहस के बाद आपको एहसास होता है कि आपने कुछ रूखा बोल दिया। अगला सबसे अच्छा कदम क्या है?", "o": ["जो कहा उसके लिए दिल से sorry बोलो, बिना बहाने बनाए", "पहले उनके sorry बोलने का इंतज़ार करो", "कहो “sorry, तुम्हें बुरा लगा” लेकिन अपने शब्दों की ज़िम्मेदारी मत लो", "ऐसे दिखाओ जैसे बहस हुई ही नहीं"]},
+{"s": "Meeting में आप सुनते हो कि एक colleague आपके काम के एक छोटे हिस्से का credit ले रहा है। सबसे सही response क्या है?", "o": ["Meeting में तमीज़ से अपना contribution clear करो, फिर colleague से अकेले में बात करो", "अभी कुछ मत बोलो, बाद में manager को बता दो", "ज़ोर से बीच में टोको और चोरी का इल्ज़ाम लगाओ", "Team के साथ अपना काम share करना बंद कर दो"]},
+{"s": "आपके close friend के मम्मी या पापा का अभी-अभी देहांत हुआ है और वो अकेले रहना चाहते हैं, लेकिन आपको उनकी फ़िक्र है। सबसे emotionally समझदार response क्या है?", "o": ["उनकी अकेले रहने की इच्छा का मान रखो, एक छोटा सा प्यार भरा message भेजो, और बता दो कि जब भी चाहें आप साथ हो", "पूरी तरह दूर रहो और कुछ मत कहो", "उनका मन बहलाने के लिए बिना बुलाए रोज़ चले जाओ", "उनसे कहो कि अब आगे बढ़ने का time है"]},
+{"s": "आप एक group project lead कर रहे हो, और दो teammates बार-बार टकराते हैं जिससे सबका काम धीमा हो रहा है। सबसे अच्छा तरीक़ा क्या है?", "o": ["दोनों से अलग-अलग मिलकर उनकी बात समझो, फिर दोनों को साथ बिठाकर काम के rules तय करो", "Project ऐसे बाँट दो कि उन्हें कभी बात न करनी पड़े", "उनसे कहो कि आपस में खुद सुलझाएँ, आपको बीच में न लाएँ", "जिसके ideas आपको ज़्यादा पसंद हैं, उसकी side ले लो"]},
+{"s": "जिन mentor की आप इज़्ज़त करते हो, वो आपको सख़्त लेकिन कुछ हद तक सही feedback देते हैं, और आपका confidence गिर जाता है। सबसे सही response क्या है?", "o": ["उन्हें thank you बोलो, जो बातें सही हैं उन्हें note करो, और examples माँगो ताकि सुधार कर सको", "तमीज़ से हाँ बोल दो लेकिन feedback को ignore कर दो", "इसे उनका ख़राब mood समझ कर ताल दो", "पूरे feedback को इस बात का सबूत मान लो कि आप किसी लायक नहीं"]},
+{"s": "Family gathering में दो रिश्तेदार पैसों को लेकर ज़ोर-ज़ोर से बहस करने लगते हैं और सब अजीब feel कर रहे हैं। आप इस में शामिल नहीं हो। सबसे अच्छा क्या है?", "o": ["शांति से थोड़ा break लेने और बाद में अकेले में बात करने का suggest करो, और प्यार से माहौल हल्का करो", "ख़त्म होने तक चुपचाप कमरे से बाहर चले जाओ", "जिस रिश्तेदार से आप सहमत हो, उसका साथ देने के लिए बहस में कूद जाओ", "Function ख़राब करने के लिए दोनों को डाँट दो"]},
+{"s": "आपकी एक ग़लती की वजह से team का एक important client चला गया, और manager पूछते हैं कि क्या हुआ। सबसे अच्छा response क्या है?", "o": ["ईमानदारी से बताओ कि क्या हुआ, ज़िम्मेदारी लो, और बताओ कि आगे ऐसा कैसे नहीं होने दोगे", "बताओ कि क्या हुआ, लेकिन ज़ोर दो कि दूसरों की भी ग़लती थी", "कहो कि आपको पक्का नहीं पता ये कैसे हुआ", "तुरंत resign करने की बात कर दो"]},
+{"s": "एक दोस्त दूसरों के सामने बार-बार आपके बोलने के लहजे (accent) का मज़ाक उड़ाता है। आपको बुरा लगता है, पर उसे शायद एहसास नहीं है। सबसे सही response क्या है?", "o": ["उन्हें अकेले में और शांति से बताओ कि इन jokes से आपको बुरा लगता है, और रुकने को कहो", "साथ में हंस दो ताकि उन्हें पता न चले, और कुछ मत कहो", "जवाब में उनका भी मज़ाक उड़ाओ", "बिना वजह बताए उनसे बात करना बंद कर दो"]},
+{"s": "जिस scholarship के लिए आपने भी apply किया था, वो आपके close friend को मिल जाती है और आपको जलन feel होती है। सबसे mature response क्या है?", "o": ["मन में जलन को मानो, दोस्त को दिल से बधाई दो, और इसे अपने plans दोबारा देखने के मौक़े की तरह लो", "खुद से कहो कि वो scholarship इतनी खास थी ही नहीं", "जब तक ये feeling न जाए, दोस्त से बचते रहो", "बधाई तो दो, पर मन में चाहो कि उनका कुछ बुरा हो"]},
+{"s": "आपके बुज़ुर्ग पापा परेशान करने वाले लक्षणों के बावजूद doctor के पास जाने से मना करते हैं, और आप डरे हुए और frustrated हो। सबसे अच्छा तरीक़ा क्या है?", "o": ["शांति से अपनी फ़िक्र बताओ, पूछो कि doctor के पास जाने में उन्हें किस बात की चिंता है, और साथ चलने का offer करो", "उन्हें सख़्ती से चेतावनी दो कि क्या हो सकता है", "झगड़े से बचने के लिए बात ही छोड़ दो", "उन्हें बताए बिना appointment book कर दो"]},
+{"s": "आपको promotion मिल रहा है जिसके लिए family से दूर दूसरे शहर जाना पड़ेगा। आप दो तरफ़ खींचे जा रहे हो। फ़ैसला करने का सबसे समझदार तरीक़ा क्या है?", "o": ["हर feeling को नाम दो, जिन पर असर पड़ेगा उनसे options discuss करो, और अपने long-term goals को तोलो", "आज जो feeling सबसे तेज़ है, उसके हिसाब से चलो", "Family को आपके लिए फ़ैसला करने दो", "फ़ैसला न करना पड़े इसलिए मना कर दो"]}
+],
+"big": {
+"N": {
+"pos": [
+"मुझे चीज़ों की चिंता लगी रहती है।",
+"मुझे अक्सर सबसे बुरा होने का डर लगता है।",
+"मुझे बहुत सी चीज़ों से डर लगता है।",
+"मुझे जल्दी stress हो जाता है।",
+"मुझे जल्दी चिढ़ आ जाती है।",
+"मेरा मन जल्दी ख़राब हो जाता है।",
+"मेरा mood अक्सर ख़राब रहता है।",
+"मुझे लगता है कि चीज़ें मुझसे सँभाली नहीं जातीं।",
+"मेरे mood swings बार-बार होते हैं।",
+"मुझे जल्दी panic हो जाता है।",
+"जो कुछ हो रहा हो, वो जल्दी मुझ पर हावी हो जाता है।",
+"मेरी feelings जल्दी मुझ पर हावी हो जाती हैं।"
+],
+"rev": [
+"ज़्यादातर time मेरा मन relaxed रहता है।",
+"छोटी-मोती बातें मुझे आसानी से परेशान नहीं करतीं।",
+"जो हो चुका है, उसकी चिंता मुझे नहीं सताती।",
+"मुझे आसानी से शर्मिंदगी नहीं होती।",
+"मुझे कभी-कभार ही गुस्सा आता है।",
+"मुश्किल में भी मेरा दिमाग ठंडा रहता है।",
+"मुझे कभी-कभार ही उदासी feel होती है।",
+"अपने आप के साथ मुझे सुकून feel होता है।",
+"Pressure में भी मेरा मन शांत रहता है।",
+"मुझे पता है कि मुश्किलों को कैसे सँभालना है।",
+"Setbacks (झटकों) से उबरने में मुझे देर नहीं लगती।",
+"Tension वाले माहौल में भी मेरे अंदर शांति बनी रहती है।"
+]
+},
+"E": {
+"pos": [
+"मेरे दोस्त आसानी से बन जाते हैं।",
+"नए लोगों के साथ मुझे खुलने में ज़्यादा time नहीं लगता।",
+"लोगों के बीच मुझे comfortable feel होता है।",
+"दूसरों का mood ठीक करना मुझे आता है।",
+"मुझे बड़ी parties बहुत पसंद हैं।",
+"Parties में मेरी बहुत सारे अलग-अलग लोगों से बात होती है।",
+"किसी group का हिस्सा बनना मुझे अच्छा लगता है।",
+"आगे बढ़कर charge लीना मेरे स्वभाव में है।",
+"दूसरों को lead करने की मेरी कोशिश रहती है।",
+"दूसरों को किसी काम के लिए मनाना मुझे आता है।",
+"मुझे हमेशा कुछ न कुछ करते रहना पसंद है।",
+"मुझे ज़िंदगी में खूब मज़ा आता है।"
+],
+"rev": [
+"लोगों के लिए मुझे जान पाना मुश्किल होता है।",
+"दूसरों के बीच मुझे अक्सर uncomfortable लगता है।",
+"लोगों से कम से कम मिलना-जुलना मुझे ठीक लगता है।",
+"लोगों को थोड़ी दूरी पर रखना मुझे ठीक लगता है।",
+"मुझे अकेले रहना ज़्यादा पसंद है।",
+"सबका ध्यान अपनी तरफ़ खींचना मुझे पसंद नहीं।",
+"भीड़-भाड़ वाले events मुझे पसंद नहीं।",
+"भीड़ से दूर रहना मुझे अच्छा लगता है।",
+"मुझे इंतज़ार रहता है कि कोई और आगे बढ़कर रास्ता दिखाए।",
+"मुझे background में रहना ठीक लगता है।",
+"मेरे पास कहने को ज़्यादा कुछ नहीं होता।",
+"अपनी राय खुल कर रखने में मुझे झिझक होती है।"
+]
+},
+"O": {
+"pos": [
+"मेरी imagination बहुत रंगीन और तेज़ है।",
+"ख़याली दुनिया में दूर तक उड़ना मुझे अच्छा लगता है।",
+"मुझे खुली आंखों से सपने देखना बहुत पसंद है।",
+"चीज़ों पर गहराई से सोचने में मेरा काफ़ी time जाता है।",
+"मेरे हिसाब से art (कला) बहुत ज़रूरी है।",
+"मुझे उन चीज़ों में भी ख़ूबसूरती दिखती है जिन पर दूसरों का ध्यान नहीं जाता।",
+"मुझे एक जैसी routine से ज़्यादा variety पसंद है।",
+"मुझे नई जगह घूमना पसंद है।",
+"मुझे बहुत सारी चीज़ों में interest है।",
+"मुश्किल, complex problems solve करना मुझे अच्छा लगता है।",
+"मुश्किल और सोचने पर मजबूर करने वाली चीज़ें पढ़ना मुझे बहुत पसंद है।",
+"चीज़ों के बारे में सोचना मुझे अच्छा लगता है।"
+],
+"rev": [
+"मेरी imagination ज़्यादा अच्छी नहीं है।",
+"चीज़ों की कल्पना करना मेरे लिए मुश्किल होता है।",
+"खुली आंखों से सपने मुझे कभी-कभार ही आते हैं।",
+"मुझे कविता या शायरी पसंद नहीं।",
+"Art museum या कला प्रदर्शनी जाना मुझे अच्छा नहीं लगता।",
+"मुझे उन्हीं चीज़ों पर टिके रहना पसंद है जो मुझे पहले से पता हैं।",
+"मुझे बदलाव पसंद नहीं।",
+"मुझे अपनी आदतों के हिसाब से ही चलना अच्छा लगता है।",
+"मुझे पुराने, चले आ रहे तरीक़े ही ठीक लगते हैं।",
+"सिद्धांत वाले, abstract ideas में मेरा interest नहीं है।",
+"Abstract ideas समझना मेरे लिए मुश्किल होता है।",
+"मुश्किल किताबें या लेख पढ़ना मुझे पसंद नहीं।"
+]
+},
+"A": {
+"pos": [
+"मुझे लोगों पर भरोसा होता है।",
+"मुझे लगता है कि लोगों की नीयत अच्छी होती है।",
+"मुझे लगता है कि ज़्यादातर लोग दिल से सही-ग़लत की समझ रखते हैं।",
+"मुझे इंसान की अच्छाई पर यक़ीन है।",
+"मेरे साथ लोगों को अपनापन feel होता है।",
+"दूसरों को क्या चाहिए, इसका अंदाज़ा मुझे पहले से हो जाता है।",
+"दूसरों की मदद करना मुझे बहुत अच्छा लगता है।",
+"मुझे दूसरों की फ़िक्र रहती है।",
+"मेरे पास हर किसी के लिए कोई न कोई अच्छी बात होती है।",
+"जो लोग मुझसे ज़्यादा मुश्किल में हैं, उनके लिए मुझे हमदर्दी होती है।",
+"दूसरों का दुख देखकर मुझे भी दुख होता है।",
+"मेरे लिए competition से ज़्यादा साथ मिलकर काम करना मायने रखता है।"
+],
+"rev": [
+"मुझे लोगों पर भरोसा नहीं होता।",
+"मुझे लगता है कि लोगों के मन में कोई छुपा हुआ मतलब होता है।",
+"दूसरे लोग मुझे अक्सर अपने से कमतर लगते हैं।",
+"दूसरों की feelings से मुझे ज़्यादा फ़र्क नहीं पड़ता।",
+"दूसरों से मुँह फेर लीना मुझे मुश्किल नहीं लगता।",
+"दूसरों के लिए मेरे पास time नहीं होता।",
+"मेरी ज़ुबान काफ़ी तीखी है।",
+"मुझसे अक्सर लोगों की बेइज़्ज़ती हो जाती है।",
+"किसी से रंजिश हो जाए तो वो मेरे मन में लंबे time तक रहती है।",
+"कोई बुरा करे तो उससे बदला लीना मुझे ठीक लगता है।",
+"मौक़ा मिले तो दूसरों का फ़ायदा उठाने में मुझे कोई परहेज़ नहीं।",
+"दूसरों की problems में मुझे interest नहीं।"
+]
+},
+"C": {
+"pos": [
+"मेरी तैयारी हमेशा पूरी रहती है।",
+"छोटी-छोटी details पर मेरा ध्यान जाता है।",
+"रोज़ के छोटे-मोटे काम मुझसे फ़ौरन निपट जाते हैं।",
+"मेरे बनाए plans पर अमल भी होता है।",
+"मेरे काम अच्छे से पूरे होते हैं।",
+"जो काम मैं शुरू करूँ, उसे पूरा करना मेरे लिए ज़रूरी है।",
+"मुझे हर चीज़ तरीक़े और सलीक़े से पसंद है।",
+"मेरे वादे पक्के होते हैं, उन्हें निभाना मेरे लिए ज़रूरी है।",
+"मेहनत करना मेरे स्वभाव में है।",
+"मेरे bills हमेशा time पर भरे जाते हैं।",
+"मुझसे जितनी उम्मीद होती है, अक्सर मेरा काम उससे बढ़कर होता है।",
+"काम कैसे पूरा करना है, ये मुझे अच्छे से आता है।"
+],
+"rev": [
+"मेरा काफ़ी time बेकार चला जाता है।",
+"काम शुरू करने बैठना मुझे मुश्किल लगता है।",
+"मेरा काम बस उतना ही होता है जितने से काम चल जाए।",
+"चीज़ें मुझसे आख़िर तक पूरी नहीं हो पातीं।",
+"मुझसे चीज़ें अक्सर बिगड़ जाती हैं।",
+"मेरे काफ़ी काम अधूरे छूट जाते हैं।",
+"काम शुरू करने के लिए मुझे किसी के push की ज़रूरत पड़ती है।",
+"चीज़ें वापस सही जगह रखना मुझे अक्सर याद नहीं रहता।",
+"मेरा सामान इधर-उधर बिखरा रहता है।",
+"अपने काम में मेरा time और मेहनत कम ही लगती है।",
+"मुझसे वादे टूट जाते हैं।",
+"जो काम सामने होता है, उस पर मेरा ध्यान नहीं लगता।"
+]
+}
+},
+"temp": {
+"FS": {
+"pos": [
+"दस साल बाद भी मेरा स्वभाव काफ़ी हद तक आज जैसा ही होगा।",
+"मुझे लगता है उम्र बढ़ने के साथ भी मेरी असली values वही रहेंगी।",
+"मुझे लगता है future में भी ज़िंदगी को देखने का मेरा नज़रिया आज जैसा ही होगा।",
+"Future में भी ज़िंदगी से मेरी चाहतें वही होंगी जो आज हैं।",
+"Future में भी मेरी बुनियादी मान्यताएँ (beliefs) आज जैसी ही रहेंगी।",
+"बाकी सब कुछ बदल जाए, पर अंदर से मेरी पहचान वही रहेगी।",
+"Future में भी ज़िंदगी की बातों पर मेरा react करने का तरीक़ा आज जैसा ही होगा।",
+"बीस साल बाद भी मेरी पहचान साफ़ तौर पर वही रहेगी।",
+"जिन लोगों की मुझे आज परवाह है, future में भी शायद वो मेरे लिए उतने ही मायने रखेंगे।",
+"Future में भी मेरा sense of humour आज जैसा ही होगा।",
+"मुझे लगता है future में भी मेरे decision लेने का तरीक़ा आज जैसा ही होगा।",
+"मुझे लगता है आज का 'मैं' और future का 'मैं' असल में एक ही इंसान हैं।"
+],
+"rev": [
+"मुझे लगता है future का 'मैं' मेरे लिए लगभग एक अजनबी जैसा होगा।",
+"दस साल बाद शायद अंदर से मेरी शख़्सियत बिलकुल अलग होगी।",
+"मुझे नहीं लगता कि future में मेरी values आज जैसी रहेंगी।",
+"Future में शायद मेरी चाहतें आज से बिलकुल अलग होंगी।",
+"मुझे लगता है future में मेरी कुछ मान्यताएँ ऐसी होंगी जिनसे आज मैं सहमत नहीं हूँ।",
+"शायद आगे चलकर मेरी शख़्सियत ऐसी हो जाएगी जिसे आज मैं पहचान भी न पाऊँ।",
+"Future के 'मैं' और आज के 'मैं' में ज़्यादा कुछ common नहीं होगा।",
+"मुझे लगता है दस साल में मेरी values पूरी तरह बदल चुकी होंगी।",
+"मुझे लगता है आज का 'मैं' और future का 'मैं' दो अलग-अलग इंसान हैं।",
+"मुझे लगता है मेरी personality इतनी बदल जाएगी कि आज का 'मैं' अजनबी लगने लगेगा।",
+"Future में पीछे मुड़कर देखने पर आज की मेरी priorities मुझे पराई लगेंगी।"
+]
+},
+"FV": {
+"pos": [
+"कुछ साल बाद की मेरी ज़िंदगी की तस्वीर मेरे मन में साफ़ और detail में बनती है।",
+"अपने future के बारे में सोचने पर मेरे मन में साफ़ तस्वीर बन जाती है।",
+"पाँच साल बाद की ज़िंदगी का एक आम दिन imagine करना मेरे लिए आसान है।",
+"Future में मेरा look और बर्ताव कैसा होगा, इसकी तस्वीर मेरे मन में बन जाती है।",
+"पाँच साल बाद मेरा घर कहाँ होगा, ये मुझे मन में साफ़ दिखता है।",
+"अपनी future life imagine करने पर उसके scenes असली और detail वाले लगते हैं।",
+"Future की job में अपनी तस्वीर मेरे दिमाग में किसी film की तरह चलती है।",
+"Future की ज़िंदगी के किसी दिन के नज़ारे और आवाज़ें मुझे आसानी से imagine हो जाते हैं।",
+"दस साल बाद मेरी शख़्सियत कैसी होगी, इसकी तस्वीर मेरे मन में एकदम साफ़ है।",
+"Future में मेरा दिखना, चलना और बोलना कैसा होगा, ये मुझे imagine हो जाता है।",
+"Future में मेरा घर और आस-पास का माहौल कैसा होगा, इसकी साफ़ तस्वीर मेरे मन में है।"
+],
+"rev": [
+"Future में मेरी शख़्सियत कैसी होगी, ये imagine करना मेरे लिए मुश्किल है।",
+"मेरे मन में future की अपनी तस्वीर धुंधली और अधूरी सी है।",
+"पाँच साल बाद मेरा काम क्या होगा, ये मुझे आसानी से नहीं दिखता।",
+"दस साल बाद की ज़िंदगी सोचने की कोशिश करूँ तो तस्वीर धुंधली सी लगती है।",
+"अपने future की साफ़ तस्वीर मेरे मन में नहीं बन पाती।",
+"Future की ज़िंदगी की मेरी तस्वीर हल्की सी है और उसमें details नहीं हैं।",
+"पाँच साल बाद मेरा घर कहाँ होगा, ये सोचना मेरे लिए मुश्किल है।",
+"Future का 'मैं' मेरे लिए बस एक धुंधली सी रेखा है, कोई असली इंसान नहीं।",
+"दस साल बाद का खुद को imagine करूँ तो मुझे बहुत कम कुछ दिखता है।",
+"मेरी future life की details मेरे लिए बिलकुल खाली पन्ने जैसी हैं।",
+"अपने future को किसी भी detail में देख पाना मेरे लिए मुश्किल है।"
+]
+},
+"FP": {
+"pos": [
+"आगे चलकर मेरी जो शख़्सियत बनेगी, उससे मिलने का मुझे इंतज़ार है।",
+"अपने future के 'मैं' को लेकर मुझे अच्छी उम्मीद है।",
+"मुझे लगता है आज के मेरे फ़ैसलों पर future में मुझे गर्व होगा।",
+"मुझे उम्मीद है कि future में मेरी ज़िंदगी अच्छी होगी।",
+"मेरी शख़्सियत जिस दिशा में बन रही है, उसके बारे में सोचकर मुझे उम्मीद जागती है।",
+"मुझे लगता है future में मेरी खुशी आज से ज़्यादा होगी।",
+"मेरी ज़िंदगी जिस दिशा में जा रही है, उसके बारे में मुझे अच्छा feel होता है।",
+"Future में मुझे जो मौक़े मिलेंगे, उन्हें लेकर मुझे excitement है।",
+"मुझे लगता है future में अपनी बनाई ज़िंदगी से मुझे संतोष होगा।",
+"अपने future के बारे में सोचकर मुझे अच्छा और positive feel होता है।",
+"मुझे confidence है कि future में मेरी सेहत और तरक्की दोनों अच्छी होंगी।",
+"आगे चलकर मेरी जो शख़्सियत बनने वाली है, वो मुझे पसंद है।"
+],
+"rev": [
+"अपने future के बारे में सोचकर मुझे बेचैनी होती है।",
+"अपने future के 'मैं' के बारे में सोचकर मेरा मन उदास हो जाता है।",
+"आगे चलकर मेरी जो शख़्सियत बन सकती है, उससे मुझे डर लगता है।",
+"मुझे चिंता है कि future में मुझे खुशी नहीं मिलेगी।",
+"दस साल बाद की अपनी ज़िंदगी imagine करके मुझे घबराहट होती है।",
+"मुझे लगता है आज के मेरे फ़ैसलों से future में मुझे निराशा होगी।",
+"आगे चलकर की अपनी शख़्सियत को लेकर मुझे ज़्यादा उम्मीद नहीं है।",
+"लगता है future में मुझे काफ़ी संघर्ष करना पड़ेगा।",
+"Future के 'मैं' के खुश रहने की मुझे उम्मीद नहीं है।",
+"अपने future की कल्पना करके ही मुझे खौफ़ सा होता है।",
+"मुझे डर है कि future में मेरी ज़िंदगी मुश्किल होगी।"
+]
+},
+"PC": {
+"pos": [
+"पाँच साल पहले के 'मैं' से मुझे अब भी जुड़ाव feel होता है।",
+"बीते हुए important पलों में मुझे कैसा लगा था, ये मुझे आसानी से याद आ जाता है।",
+"अपने पहले के दिनों में मुझे आज भी अपनी झलक दिखती है।",
+"अपने पहले वाले 'मैं' को लेकर मेरे मन में सुकून है।",
+"पहले के अपने जिन फ़ैसलों से मुझे फ़ायदा हुआ, उनके लिए मेरे मन में शुक्रिया का एहसास है।",
+"मुझे लगता है बचपन वाला 'मैं' और आज का 'मैं' एक ही हैं।",
+"मेरे school के दिन और आज की ज़िंदगी एक ही कहानी का हिस्सा लगते हैं।",
+"मेरे पुराने अनुभवों ने मुझे आज जैसा बनाया है, और ये connection मुझे साफ़ दिखता है।",
+"पहले मैंने जो फ़ैसले लिए, वो क्यों लिए, ये मुझे समझ आता है।",
+"अपने पहले वाले 'मैं' से मुझे नज़दीकी feel होती है।",
+"अपने कम-उम्र वाले दिनों को याद करूँ तो उस वक़्त के 'मैं' को समझना मुझे आसान लगता है।"
+],
+"rev": [
+"मेरा पहले वाला 'मैं' मुझे कोई और ही इंसान लगता है।",
+"अपने पहले वाले 'मैं' से मुझे कोई जुड़ाव feel नहीं होता।",
+"पहले की अपनी सोच और feelings से खुद को जोड़ना मुझे मुश्किल लगता है।",
+"दस साल पहले का 'मैं' और आज का 'मैं' मुझे बिलकुल अलग इंसान लगते हैं।",
+"मेरा बीता हुआ कल आज के 'मैं' से कैसे जुड़ा है, ये देख पाना मुश्किल है।",
+"पहले मैंने जो किया, वो क्यों किया, ये समझना मेरे लिए मुश्किल है।",
+"मेरा कम-उम्र वाला 'मैं' ऐसा लगता है जैसे उसे कभी ठीक से जाना ही नहीं।",
+"मेरा बीता हुआ कल ऐसा लगता है जैसे किसी और के साथ हुआ हो।",
+"School के दिनों वाले 'मैं' से मुझे ज़्यादा जुड़ाव feel नहीं होता।",
+"अपनी पुरानी photos देखकर उनमें दिखने वाले इंसान से मुझे कोई रिश्ता feel नहीं होता।",
+"पाँच साल पहले के मेरे goals अब मुझे अपने नहीं लगते।"
+]
+}
+}
+};
+
+/* =====================================================================
+   LANGUAGE LAYER
+   Every word the client sees lives in UI_TEXT below (plus PACK_BANKS for the
+   question bank). 'hi' is Hinglish written in Devanagari, with common English
+   words (test, stress, feel...) kept in English. To change the wording or the
+   script, edit only the 'hi' strings here, PACK_BANKS and the few 'hi'
+   sentence templates marked HI-TEMPLATE; nothing else needs to change.
+   Scoring never depends on the language: answers are checked by position and
+   the personality keying is taken from the English bank.
+   ===================================================================== */
+const LANG_OPTIONS = [
+  { code: 'hi', label: 'हिंदी (Hinglish)', sub: 'हिंदी + English, देवनागरी में', script: 'deva', htmlLang: 'hi' },
+  { code: 'en', label: 'English', sub: 'All questions in English', script: 'latn', htmlLang: 'en-GB' }
+];
+let LANG = 'en';
+const UI_TEXT = {
+  en: {
+    langTitle: 'Choose your language', langSub: 'Apni bhasha chuniye',
+    subtitle: 'A short screening before your counselling session',
+    changeLang: 'Change language',
+    screeningOnly: 'Screening only.',
+    notice: 'This is a practice and screening estimate. Age-group norms are approximate assumptions, not drawn from a validated sample, and the result is not a clinical or diagnostic assessment. It cannot diagnose or rule out any condition. For a formal assessment, speak to a qualified psychologist.',
+    lenTitle: 'Length of the test',
+    lenBig: '{q} questions plus {t} short timed tasks · about {m} minutes',
+    lenText: 'The {q} questions are all scored. The {t} short timed tasks (a digit-memory task and a 35-second speed block) are extra. Most people finish in {m} to {m4} minutes, so please allow {m5} minutes. The first few questions set the difficulty for the rest of the run.',
+    aboutTitle: 'About you',
+    aboutText: 'Your age sets the difficulty and the norms used for your estimate, and the other answers refine it slightly.',
+    name: 'Name', namePh: 'Your full name',
+    age: 'Age (15 to 55)', agePh: 'For example 27', ageErr: 'Please enter an age between 15 and 55.',
+    gender: 'Gender (optional)', edu: 'Highest education so far', occ: 'Current occupation',
+    state: 'State or union territory', lang: 'First language',
+    readQ: 'How comfortable are you reading English? Many questions use English words.',
+    sleep: 'Sleep last night', prior: 'Have you taken a similar test before?',
+    select: 'Select',
+    consent: 'I understand that my answers and results will be sent to my counsellor, and that I will not see the results on this screen.',
+    startBtn: 'Start the assessment',
+    stillNeeded: 'Still needed: {list}.', needName: 'your name', needAge: 'a valid age', needEdu: 'your education', needConsent: 'the consent tick box',
+    expectTitle: 'What to expect',
+    expectText: 'You will see one question after another, mixed together at random. A few short memory and timed tasks appear at random points and start only when you are ready. Please work somewhere quiet and give the first few questions your best effort. You can skip any question; skipped questions count as unanswered.',
+    qOf: 'Question {i} of {n}', complete: '{p}% complete', shortTask: 'Short task',
+    confirm: 'Confirm answer', skip: 'Skip',
+    likertQ: 'How well does this describe you?',
+    likert: ['Strongly disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly agree'],
+    spanFwd: 'Memorise the digits, then type them in the same order.',
+    spanBack: 'Memorise the digits, then type them in reverse order (last digit first).',
+    watch: 'Watch closely · trial {n}', clear: 'Clear', submit: 'Submit', skipOne: 'Skip this one', enterN: 'Enter {n} digits · trial {t}',
+    timeLeft: 'Time remaining', itemOf: 'Item {i} of {n}',
+    speedIntro: 'You will see up to {n} easy questions. Answer as many as you can, as accurately as you can, in {s} seconds. The clock starts when you press the button.',
+    startClock: 'Start the clock',
+    doneTitle: 'All questions answered',
+    doneText: 'Thank you for completing the assessment. Press <strong>Submit test</strong> to send your answers to your counsellor. Your results are not shown on this screen; your counsellor will share them with you.',
+    submitting: 'Submitting…', retry: 'Retry submit', submitTest: 'Submit test',
+    keepOpen: 'Please keep this page open until you see the thank-you message.',
+    errNoSheet: 'This test is not connected to a results sheet yet. Please tell your counsellor. Your answers are kept on this page.',
+    errSend: 'We could not send your test. Please check your internet connection and try again. Your answers are kept on this page.',
+    thanksTitle: 'Thank you', thanksText: 'Thank you, your test has been submitted. Your counsellor will share your results with you.',
+    /* question wording */
+    seriesQ: 'What number comes next in the series?', letterQ: 'Which letter comes next in the series?',
+    matrixQ: 'Each row and column follows a rule. Which option replaces the “?” to complete the grid?',
+    anaQ: 'Choose the word that completes the analogy.', oddQ: 'Which one does not belong with the others?',
+    perQ: 'Which emotion is this person most likely feeling?', manQ: 'Choose the most effective response.',
+    oddSym: 'One symbol in this grid is different from all the others. Tap it.',
+    countSym: 'How many solid {s} symbols are in this grid? (Hollow shapes do not count.)',
+    cannot: 'Cannot be determined'
+  },
+  hi: {
+     "langTitle": "अपनी भाषा चुनिए",
+     "langSub": "Choose your language",
+     "subtitle": "Counselling session से पहले एक छोटा सा screening test",
+     "changeLang": "भाषा बदलें",
+     "screeningOnly": "सिर्फ़ screening के लिए।",
+     "notice": "ये एक practice और screening estimate है। Age-group के norms अंदाज़े पर based हैं, किसी validated sample से नहीं, और ये result कोई clinical या diagnostic assessment नहीं है। इससे किसी भी condition का diagnosis नहीं होता, न ही किसी condition को rule out किया जा सकता है। Formal assessment के लिए किसी qualified psychologist से बात करें।",
+     "lenTitle": "Test कितना लंबा है",
+     "lenBig": "{q} सवाल और {t} छोटे timed tasks · लगभग {m} minute",
+     "lenText": "सारे {q} सवालों के marks count होते हैं। {t} छोटे timed tasks (एक number याद रखने वाला task और एक 35 second का speed round) extra हैं। ज़्यादातर लोग {m} से {m4} minute में test पूरा कर लेते हैं, इसलिए {m5} minute का time लेकर बैठें। शुरू के कुछ सवाल बाकी test का level तय करते हैं।",
+     "aboutTitle": "आपके बारे में",
+     "aboutText": "आपकी उम्र से test का level और comparison के norms तय होते हैं। बाकी जवाब result को थोड़ा और सही बनाते हैं।",
+     "name": "नाम",
+     "namePh": "आपका पूरा नाम",
+     "age": "उम्र (15 से 55 साल)",
+     "agePh": "जैसे 27",
+     "ageErr": "कृपया 15 से 55 के बीच की उम्र लिखें।",
+     "gender": "Gender (optional)",
+     "edu": "अब तक की सबसे ऊँची पढ़ाई",
+     "occ": "अभी आप क्या करते हैं",
+     "state": "State या union territory",
+     "lang": "पहली भाषा (मातृभाषा)",
+     "readQ": "इस test की भाषा (देवनागरी में Hinglish) पढ़ने में आप कितने comfortable हैं?",
+     "sleep": "कल रात कितनी नींद आई",
+     "prior": "क्या आपने पहले भी ऐसा कोई test दिया है?",
+     "select": "चुनिए",
+     "consent": "मुझे पता है कि मेरे जवाब और result मेरे counsellor को भेजे जाएंगे, और result इस screen पर नहीं दिखेगा।",
+     "startBtn": "Test शुरू करें",
+     "stillNeeded": "अभी ये बाकी है: {list}।",
+     "needName": "आपका नाम",
+     "needAge": "सही उम्र",
+     "needEdu": "आपकी पढ़ाई",
+     "needConsent": "consent वाला tick box",
+     "expectTitle": "Test में क्या होगा",
+     "expectText": "आपको एक के बाद एक सवाल दिखेंगे, अलग-अलग type के, random order में। बीच-बीच में कुछ छोटे memory और timed tasks आएंगे, जो तभी शुरू होंगे जब आप ready होंगे। किसी शांत जगह पर बैठें और शुरू के सवालों पर पूरा ध्यान दें। आप कोई भी सवाल skip कर सकते हैं; skip किए गए सवाल unanswered माने जाएंगे।",
+     "qOf": "सवाल {i} / {n}",
+     "complete": "{p}% पूरा",
+     "shortTask": "छोटा task",
+     "confirm": "जवाब confirm करें",
+     "skip": "Skip करें",
+     "likertQ": "ये बात आप पर कितनी सही बैठती है?",
+     "likert": [
+      "बिलकुल सहमत नहीं",
+      "सहमत नहीं",
+      "न हाँ, न ना",
+      "सहमत",
+      "पूरी तरह सहमत"
+     ],
+     "spanFwd": "Numbers को ध्यान से याद कर लीजिए, फिर उन्हें उसी order में type कीजिए।",
+     "spanBack": "Numbers को याद कर लीजिए, फिर उन्हें उल्टे order में type कीजिए (आख़िरी number सबसे पहले)।",
+     "watch": "ध्यान से देखिए · try {n}",
+     "clear": "मिटाएँ",
+     "submit": "Submit",
+     "skipOne": "इसे skip करें",
+     "enterN": "{n} numbers लिखिए · try {t}",
+     "timeLeft": "बचा हुआ time",
+     "itemOf": "सवाल {i} / {n}",
+     "speedIntro": "आपको {n} तक आसान सवाल दिखेंगे। {s} second में जितने हो सकें, उतने सही-सही जवाब दीजिए। Button दबाते ही घड़ी शुरू हो जाएगी।",
+     "startClock": "घड़ी शुरू करें",
+     "doneTitle": "सारे सवाल हो गए",
+     "doneText": "Test पूरा करने के लिए शुक्रिया। अपने जवाब counsellor तक भेजने के लिए <strong>Test submit करें</strong> दबाइए। आपका result इस screen पर नहीं दिखेगा; आपके counsellor आपसे share करेंगे।",
+     "submitting": "भेजा जा रहा है…",
+     "retry": "दोबारा submit करें",
+     "submitTest": "Test submit करें",
+     "keepOpen": "Thank-you message आने तक ये page खुला रखिए।",
+     "errNoSheet": "ये test अभी किसी results sheet से जुड़ा नहीं है। कृपया अपने counsellor को बताइए। आपके जवाब इस page पर safe हैं।",
+     "errSend": "आपका test भेजा नहीं जा सका। अपना internet check करके दोबारा कोशिश कीजिए। आपके जवाब इस page पर safe हैं।",
+     "thanksTitle": "शुक्रिया",
+     "thanksText": "शुक्रिया, आपका test submit हो गया है। आपके counsellor आपका result आपसे share करेंगे।",
+     "seriesQ": "Series में अगला number क्या आएगा?",
+     "letterQ": "Series में अगला letter कौन सा आएगा?",
+     "matrixQ": "हर row और column एक rule follow करता है। “?” की जगह कौन सा option आएगा?",
+     "anaQ": "जो रिश्ता पहली जोड़ी में है, वही रिश्ता दूसरी जोड़ी में बनाने वाला शब्द चुनिए।",
+     "oddQ": "इनमें से कौन सा बाकी सब से अलग है?",
+     "perQ": "ये इंसान सबसे ज़्यादा क्या feel कर रहा होगा?",
+     "manQ": "सबसे अच्छा response चुनिए।",
+     "oddSym": "इस grid में एक symbol बाकी सब से अलग है। उस पर tap कीजिए।",
+     "countSym": "इस grid में कितने भरे हुए (solid) {s} हैं? (खोखले shapes नहीं गिनने हैं।)",
+     "cannot": "पक्का नहीं कहा जा सकता"
+    }
+};
+/* Biodata: the stored value stays in English (for scoring and for the counsellor's sheet); only the label is translated */
+const BIO_LABELS_HI = {
+ "Female": "महिला",
+ "Male": "पुरुष",
+ "Non-binary": "Non-binary",
+ "Prefer not to say": "नहीं बताना चाहते",
+ "Class 10 or below": "10वीं या उससे कम",
+ "Class 11–12 / pre-university": "11वीं–12वीं",
+ "Diploma / ITI": "Diploma / ITI",
+ "Undergraduate": "Graduation (BA, BSc, BCom, BTech आदि)",
+ "Postgraduate": "Post-graduation (MA, MSc, MBA आदि)",
+ "Doctorate / professional degree": "PhD / professional degree (MBBS, CA, LLB आदि)",
+ "School student": "School student",
+ "College student": "College student",
+ "Employed (private sector)": "नौकरी (private sector)",
+ "Employed (government / public sector)": "नौकरी (सरकारी / public sector)",
+ "Self-employed / business": "अपना काम / business",
+ "Homemaker": "Homemaker (गृहिणी)",
+ "Between jobs": "अभी नौकरी की तलाश में",
+ "Other": "अन्य",
+ "Hindi": "हिंदी",
+ "English": "English",
+ "Bengali": "बांग्ला",
+ "Marathi": "मराठी",
+ "Telugu": "तेलुगु",
+ "Tamil": "तमिल",
+ "Gujarati": "गुजराती",
+ "Urdu": "उर्दू",
+ "Kannada": "कन्नड़",
+ "Odia": "ओड़िया",
+ "Malayalam": "मलयालम",
+ "Punjabi": "पंजाबी",
+ "Assamese": "असमिया",
+ "Outside India": "भारत के बाहर",
+ "Under 5 hours": "5 घंटे से कम",
+ "5 to 6 hours": "5 से 6 घंटे",
+ "7 to 8 hours": "7 से 8 घंटे",
+ "More than 8 hours": "8 घंटे से ज़्यादा",
+ "No, this is my first time": "नहीं, पहली बार दे रहे हैं",
+ "Yes, a while ago": "हाँ, काफ़ी पहले",
+ "Yes, recently": "हाँ, हाल ही में",
+ "Basic": "थोड़ा सा",
+ "Fair": "ठीक-ठाक",
+ "Good": "अच्छा",
+ "Very good": "बहुत अच्छा",
+ "Fluent": "एकदम आसानी से",
+ "Andhra Pradesh": "आंध्र प्रदेश",
+ "Arunachal Pradesh": "अरुणाचल प्रदेश",
+ "Assam": "असम",
+ "Bihar": "बिहार",
+ "Chhattisgarh": "छत्तीसगढ़",
+ "Goa": "गोवा",
+ "Gujarat": "गुजरात",
+ "Haryana": "हरियाणा",
+ "Himachal Pradesh": "हिमाचल प्रदेश",
+ "Jharkhand": "झारखंड",
+ "Karnataka": "कर्नाटक",
+ "Kerala": "केरल",
+ "Madhya Pradesh": "मध्य प्रदेश",
+ "Maharashtra": "महाराष्ट्र",
+ "Manipur": "मणिपुर",
+ "Meghalaya": "मेघालय",
+ "Mizoram": "मिज़ोरम",
+ "Nagaland": "नागालैंड",
+ "Odisha": "ओडिशा",
+ "Punjab": "पंजाब",
+ "Rajasthan": "राजस्थान",
+ "Sikkim": "सिक्किम",
+ "Tamil Nadu": "तमिलनाडु",
+ "Telangana": "तेलंगाना",
+ "Tripura": "त्रिपुरा",
+ "Uttar Pradesh": "उत्तर प्रदेश",
+ "Uttarakhand": "उत्तराखंड",
+ "West Bengal": "पश्चिम बंगाल",
+ "Andaman and Nicobar Islands": "अंडमान और निकोबार द्वीप समूह",
+ "Chandigarh": "चंडीगढ़",
+ "Dadra and Nagar Haveli and Daman and Diu": "दादरा और नगर हवेली और दमन और दीव",
+ "Delhi": "दिल्ली",
+ "Jammu and Kashmir": "जम्मू और कश्मीर",
+ "Ladakh": "लद्दाख",
+ "Lakshadweep": "लक्षद्वीप",
+ "Puducherry": "पुडुचेरी"
+};
+function t(key, vars) {
+  const pack = UI_TEXT[LANG] || UI_TEXT.en;
+  let s = pack[key] !== undefined ? pack[key] : UI_TEXT.en[key];
+  if (typeof s === 'string' && vars) s = s.replace(/\{(\w+)\}/g, function (m, k) { return vars[k] !== undefined ? vars[k] : m; });
+  return s;
+}
+function bioLabel(v) { return LANG === 'hi' && BIO_LABELS_HI[v] ? BIO_LABELS_HI[v] : v; }
+
+/* Swap the question bank text to the chosen language. English originals are kept so the
+   client can switch back. Levels, correct answers, MANAGE points and pos/rev keying always
+   come from the English bank. */
+let EN_BANK = null;
+function setLanguage(code) {
+  LANG = UI_TEXT[code] ? code : 'en';
+  if (!EN_BANK) EN_BANK = JSON.parse(JSON.stringify({ A: ANALOGIES, O: ODDS, L: LOGICS, P: PERCEIVE, U: UNDERSTAND, M: MANAGE, B: BIG, T: TEMP }));
+  const E = EN_BANK, H = (LANG === 'hi') ? PACK_BANKS : null;
+  ANALOGIES.forEach(function (_, i) {
+    const e = E.A[i];
+    ANALOGIES[i] = H ? [H.analogies[i][0] + ' : ' + H.analogies[i][1] + ' :: ' + H.analogies[i][2] + ' : ?'].concat(H.analogies[i].slice(3, 7), [e[5]]) : e.slice();
+  });
+  ODDS.forEach(function (_, i) {
+    const e = E.O[i];
+    ODDS[i] = H ? od(H.odds[i][0], H.odds[i][1], e.lvl) : { same: e.same.slice(), odd: e.odd, lvl: e.lvl };
+  });
+  LOGICS.forEach(function (_, i) {
+    const e = E.L[i];
+    LOGICS[i] = H ? { p: H.logics[i].p, c: H.logics[i].c, w: H.logics[i].w.slice(), lvl: e.lvl } : { p: e.p, c: e.c, w: e.w.slice(), lvl: e.lvl };
+  });
+  PERCEIVE.forEach(function (_, i) { const e = E.P[i]; PERCEIVE[i] = H ? H.perceive[i].slice(0, 5).concat([e[5]]) : e.slice(); });
+  UNDERSTAND.forEach(function (_, i) { const e = E.U[i]; UNDERSTAND[i] = H ? H.understand[i].slice(0, 5).concat([e[5]]) : e.slice(); });
+  MANAGE.forEach(function (_, i) {
+    const e = E.M[i];
+    MANAGE[i] = { lvl: e.lvl, s: H ? H.manage[i].s : e.s, o: e.o.map(function (x, k) { return [H ? H.manage[i].o[k] : x[0], x[1]]; }) };
+  });
+  Object.keys(BIG).forEach(function (k) { BIG[k].pos = (H ? H.big[k].pos : E.B[k].pos).slice(); BIG[k].rev = (H ? H.big[k].rev : E.B[k].rev).slice(); });
+  Object.keys(TEMP).forEach(function (k) { TEMP[k].pos = (H ? H.temp[k].pos : E.T[k].pos).slice(); TEMP[k].rev = (H ? H.temp[k].rev : E.T[k].rev).slice(); });
+  const opt = LANG_OPTIONS.filter(function (o) { return o.code === LANG; })[0];
+  if (typeof document !== 'undefined' && document.documentElement) document.documentElement.lang = opt ? opt.htmlLang : 'en-GB';
+}
 
 /* ===== Test construction ===== */
 /* Questions that count toward the 60: 5 starter + 55 main-run questions.
@@ -808,10 +1686,10 @@ function gen(fn) {
   }
   return fn();
 }
-function analogyItem(a) { return mcItem('verb', a[0] + '\nChoose the word that completes the analogy.', a[1], [a[2], a[3], a[4]]); }
+function analogyItem(a) { return mcItem('verb', a[0] + '\n' + t('anaQ'), a[1], [a[2], a[3], a[4]]); }
 function oddItem(o) {
   const opts = shuffle(o.same.concat([o.odd]));
-  return { id: uid(), area: 'verb', prompt: 'Which one does not belong with the others?', options: opts, answer: opts.indexOf(o.odd) };
+  return { id: uid(), area: 'verb', prompt: t('oddQ'), options: opts, answer: opts.indexOf(o.odd) };
 }
 function logicFrom(l, area) {
   const it = mcItem(area, l.p, l.c, l.w);
@@ -864,7 +1742,7 @@ function buildTemporal() {
 function buildEI(L) {
   const items = [];
   for (const q of take(lvlPool(PERCEIVE, L, function (x) { return x[5]; }), 3, kE)) {
-    items.push(mcItem('per', q[0] + '\nWhich emotion is this person most likely feeling?', q[1], [q[2], q[3], q[4]]));
+    items.push(mcItem('per', q[0] + '\n' + t('perQ'), q[1], [q[2], q[3], q[4]]));
   }
   for (const q of take(lvlPool(UNDERSTAND, L, function (x) { return x[5]; }), 2, kE)) {
     items.push(mcItem('und', q[0], q[1], [q[2], q[3], q[4]]));
@@ -872,7 +1750,7 @@ function buildEI(L) {
   for (const s of take(lvlPool(MANAGE, L, function (x) { return x.lvl; }), 2, kE)) {
     const idx = shuffle([0, 1, 2, 3]);
     items.push({
-      id: uid(), area: 'man', prompt: s.s + '\nChoose the most effective response.',
+      id: uid(), area: 'man', prompt: s.s + '\n' + t('manQ'),
       options: idx.map(function (i) { return s.o[i][0]; }),
       pts: idx.map(function (i) { return s.o[i][1]; }),
       answer: idx.indexOf(0)
@@ -948,7 +1826,7 @@ function bioAdjust(bio, ageN) {
   const e = EDU_ADJ[bio.edu];
   if (e !== undefined && e !== 0 && ageN >= 18) { adj += e; notes.push('education level'); }
   const eng = parseInt(bio.eng, 10);
-  if (eng > 0 && eng <= 2) { adj -= 0.02; notes.push('comfort with English (verbal items are in English)'); }
+  if (eng > 0 && eng <= 2) { adj -= 0.02; notes.push(LANG === 'hi' ? 'comfort with reading the Hindi (Hinglish) version' : 'comfort with English (verbal items are in English)'); }
   if (bio.sleep === 'Under 5 hours') { adj -= 0.01; notes.push('short sleep last night'); }
   if (bio.prior === 'Yes, recently') { adj += 0.01; notes.push('recent practice with similar tests'); }
   return { adj: adj, notes: notes };
@@ -1156,10 +2034,14 @@ function buildPayload(ctx) {
     reportId: ctx.reportId,
     timestamp: ctx.timestamp,
     testDate: ctx.testDate,
+    lang: LANG,
+    langScript: LANG === 'hi' ? 'deva' : 'latn',
+    testLanguage: LANG === 'hi' ? 'Hindi (Hinglish, Devanagari)' : 'English',
     biodata: {
       name: (bio.name || '').trim(), age: parseInt(bio.age, 10), ageBand: band.label, gender: bio.gender || '', education: bio.edu || '',
       occupation: bio.occ || '', state: bio.state || '', language: bio.lang || '',
-      englishComfort: ENG_LABELS[(parseInt(bio.eng, 10) || 3) - 1], sleepLastNight: bio.sleep || '', similarTestBefore: bio.prior || ''
+      englishComfort: LANG === 'hi' ? 'n/a (test taken in Hindi)' : ENG_LABELS[(parseInt(bio.eng, 10) || 3) - 1],
+      readingComfort: ENG_LABELS[(parseInt(bio.eng, 10) || 3) - 1], readingComfortLanguage: LANG === 'hi' ? 'Hindi (Hinglish)' : 'English', sleepLastNight: bio.sleep || '', similarTestBefore: bio.prior || ''
     },
     estimate: { iq: r.iq, rangeLow: r.lo, rangeHigh: r.hi, percentile: r.pct, category: r.cat },
     summary: rep.summary,
@@ -1201,12 +2083,13 @@ function buildReportText(p) {
   L.push('Report ID:     ' + p.reportId);
   L.push('Age group:     ' + p.biodata.ageBand + ' (age ' + p.biodata.age + ')');
   L.push('Test version:  ' + p.testVersion);
+  L.push('Test language: ' + (p.testLanguage || 'English') + (p.lang === 'hi' ? ' (client PDF is in Hindi)' : ''));
   L.push('Submitted:     ' + p.timestamp);
   L.push('');
   L.push('BIODATA');
   L.push(hr);
   L.push('Gender: ' + (p.biodata.gender || '-') + ' | Education: ' + (p.biodata.education || '-') + ' | Occupation: ' + (p.biodata.occupation || '-'));
-  L.push('State/UT: ' + (p.biodata.state || '-') + ' | First language: ' + (p.biodata.language || '-') + ' | English comfort: ' + p.biodata.englishComfort);
+  L.push('State/UT: ' + (p.biodata.state || '-') + ' | First language: ' + (p.biodata.language || '-') + ' | Reading comfort (' + (p.biodata.readingComfortLanguage || 'English') + '): ' + (p.biodata.readingComfort || p.biodata.englishComfort));
   L.push('Sleep last night: ' + (p.biodata.sleepLastNight || '-') + ' | Similar test before: ' + (p.biodata.similarTestBefore || '-'));
   L.push('');
   L.push('ESTIMATED IQ');
@@ -1262,7 +2145,7 @@ function buildReportText(p) {
 
 /* ===== App state and UI ===== */
 const S = {
-  phase: 'start',
+  phase: 'lang',
   bio: { name: '', age: '', gender: '', edu: '', occ: '', state: '', lang: '', eng: '3', sleep: '', prior: '' },
   consent: false,
   steps: [], idx: 0, level: 0, answers: {}, scores: {},
@@ -1292,51 +2175,73 @@ function estimate() {
 }
 
 function headerHtml() {
-  return '<header class="top"><h1>' + esc(APP_NAME) + '</h1><p class="sub">A short screening before your counselling session</p></header>';
+  return '<header class="top"><h1>' + esc(APP_NAME) + '</h1><p class="sub">' + esc(t('subtitle')) + '</p></header>';
 }
 function render() {
   clearTimers();
-  if (S.phase === 'start') renderStart();
+  if (S.phase === 'lang') renderLang();
+  else if (S.phase === 'start') renderStart();
   else if (S.phase === 'run') renderRun();
   else if (S.phase === 'review') renderReview();
   else renderDone();
   if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo(0, 0);
 }
 
+/* ---- language choice ---- */
+function renderLang() {
+  root.innerHTML = '<header class="top"><h1>' + esc(APP_NAME) + '</h1></header>' +
+    '<section class="card center" style="padding:28px 20px"><h2>' + esc(UI_TEXT.hi.langTitle) + '</h2><p class="muted">' + esc(UI_TEXT.en.langTitle) + '</p>' +
+    '<div class="opts" style="max-width:360px;width:100%;margin:8px auto 0">' +
+    LANG_OPTIONS.map(function (o) {
+      return '<button type="button" class="opt" data-lang="' + o.code + '" lang="' + o.htmlLang + '" style="text-align:center;padding:16px"><span style="display:block;font-size:22px;font-weight:600">' + esc(o.label) + '</span><span class="muted small">' + esc(o.sub) + '</span></button>';
+    }).join('') + '</div></section>';
+  $$('[data-lang]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      setLanguage(el.getAttribute('data-lang'));
+      EST = estimate();
+      S.phase = 'start';
+      render();
+    });
+  });
+}
+
 /* ---- start / biodata ---- */
 function optionsHtml(list, val) {
-  return list.map(function (o) { return '<option value="' + esc(o) + '"' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
+  return list.map(function (o) { return '<option value="' + esc(o) + '"' + (o === val ? ' selected' : '') + '>' + esc(bioLabel(o)) + '</option>'; }).join('');
 }
 function selectField(key, label, list) {
-  return '<label class="field"><span>' + label + '</span><select data-bio="' + key + '"><option value="">Select</option>' + optionsHtml(list, S.bio[key]) + '</select></label>';
+  return '<label class="field"><span>' + esc(label) + '</span><select data-bio="' + key + '"><option value="">' + esc(t('select')) + '</option>' + optionsHtml(list, S.bio[key]) + '</select></label>';
 }
 function renderStart() {
   const b = S.bio;
   const eng = ENG_LABELS.map(function (l, i) {
-    return '<button type="button" class="seg' + (String(i + 1) === b.eng ? ' sel' : '') + '" data-eng="' + (i + 1) + '">' + l + '</button>';
+    return '<button type="button" class="seg' + (String(i + 1) === b.eng ? ' sel' : '') + '" data-eng="' + (i + 1) + '">' + esc(bioLabel(l)) + '</button>';
   }).join('');
+  const tv = { q: EST.q, t: EST.timed, m: EST.minutes, m4: EST.minutes + 4, m5: EST.minutes + 5 };
   root.innerHTML = headerHtml() +
-    '<div class="notice"><strong>Screening only.</strong> ' + esc(NOTICE) + '</div>' +
-    '<section class="card"><h2>Length of the test</h2>' +
-    '<p class="big">' + EST.q + ' questions plus ' + EST.timed + ' short timed tasks · about ' + EST.minutes + ' minutes</p>' +
-    '<p class="muted">The ' + EST.q + ' questions are all scored. The ' + EST.timed + ' short timed tasks (a digit-memory task and a 35-second speed block) are extra. Most people finish in ' + EST.minutes + ' to ' + (EST.minutes + 4) + ' minutes, so please allow ' + (EST.minutes + 5) + ' minutes. The first few questions set the difficulty for the rest of the run.</p></section>' +
-    '<section class="card"><h2>About you</h2>' +
-    '<p class="muted">Your age sets the difficulty and the norms used for your estimate, and the other answers refine it slightly.</p>' +
-    '<label class="field"><span>Name</span><input type="text" data-bio="name" autocomplete="name" placeholder="Your full name" value="' + esc(b.name) + '"></label>' +
-    '<label class="field"><span>Age (15 to 55)</span><input type="number" inputmode="numeric" min="15" max="55" data-bio="age" placeholder="For example 27" value="' + esc(b.age) + '"></label>' +
-    '<p class="err" id="ageErr" style="display:none">Please enter an age between 15 and 55.</p>' +
-    selectField('gender', 'Gender (optional)', GENDERS) +
-    selectField('edu', 'Highest education so far', EDUS) +
-    selectField('occ', 'Current occupation', OCCS) +
-    selectField('state', 'State or union territory', STATES) +
-    selectField('lang', 'First language', LANGS) +
-    '<div class="field"><span>How comfortable are you reading English? Many questions use English words.</span><div class="segs">' + eng + '</div></div>' +
-    selectField('sleep', 'Sleep last night', SLEEPS) +
-    selectField('prior', 'Have you taken a similar test before?', PRIORS) +
-    '<label class="check"><input type="checkbox" id="consent"' + (S.consent ? ' checked' : '') + '><span>I understand that my answers and results will be sent to my counsellor, and that I will not see the results on this screen.</span></label>' +
-    '<button type="button" class="btn primary" id="startBtn" disabled>Start the assessment</button>' +
+    '<div class="row" style="justify-content:flex-end"><button type="button" class="btn" id="langBtn" style="padding:6px 12px;font-size:14px">' + esc(t('changeLang')) + ' (' + (LANG === 'hi' ? 'हिंदी' : 'English') + ')</button></div>' +
+    '<div class="notice"><strong>' + esc(t('screeningOnly')) + '</strong> ' + esc(t('notice')) + '</div>' +
+    '<section class="card"><h2>' + esc(t('lenTitle')) + '</h2>' +
+    '<p class="big">' + esc(t('lenBig', tv)) + '</p>' +
+    '<p class="muted">' + esc(t('lenText', tv)) + '</p></section>' +
+    '<section class="card"><h2>' + esc(t('aboutTitle')) + '</h2>' +
+    '<p class="muted">' + esc(t('aboutText')) + '</p>' +
+    '<label class="field"><span>' + esc(t('name')) + '</span><input type="text" data-bio="name" autocomplete="name" placeholder="' + esc(t('namePh')) + '" value="' + esc(b.name) + '"></label>' +
+    '<label class="field"><span>' + esc(t('age')) + '</span><input type="number" inputmode="numeric" min="15" max="55" data-bio="age" placeholder="' + esc(t('agePh')) + '" value="' + esc(b.age) + '"></label>' +
+    '<p class="err" id="ageErr" style="display:none">' + esc(t('ageErr')) + '</p>' +
+    selectField('gender', t('gender'), GENDERS) +
+    selectField('edu', t('edu'), EDUS) +
+    selectField('occ', t('occ'), OCCS) +
+    selectField('state', t('state'), STATES) +
+    selectField('lang', t('lang'), LANGS) +
+    '<div class="field"><span>' + esc(t('readQ')) + '</span><div class="segs">' + eng + '</div></div>' +
+    selectField('sleep', t('sleep'), SLEEPS) +
+    selectField('prior', t('prior'), PRIORS) +
+    '<label class="check"><input type="checkbox" id="consent"' + (S.consent ? ' checked' : '') + '><span>' + esc(t('consent')) + '</span></label>' +
+    '<button type="button" class="btn primary" id="startBtn" disabled>' + esc(t('startBtn')) + '</button>' +
     '<p class="muted small" id="startHint"></p></section>' +
-    '<section class="card"><h2>What to expect</h2><p class="muted">You will see one question after another, mixed together at random. A few short memory and timed tasks appear at random points and start only when you are ready. Please work somewhere quiet and give the first few questions your best effort. You can skip any question; skipped questions count as unanswered.</p></section>';
+    '<section class="card"><h2>' + esc(t('expectTitle')) + '</h2><p class="muted">' + esc(t('expectText')) + '</p></section>';
+  $('#langBtn').addEventListener('click', function () { S.phase = 'lang'; render(); });
   $$('[data-bio]').forEach(function (el) {
     const ev = el.tagName === 'SELECT' ? 'change' : 'input';
     el.addEventListener(ev, function () { S.bio[el.getAttribute('data-bio')] = el.value; refreshStart(); });
@@ -1363,11 +2268,11 @@ function refreshStart() {
   let hint = '';
   if (!v.ok) {
     const miss = [];
-    if (S.bio.name.trim() === '') miss.push('your name');
-    if (!v.ageOk) miss.push('a valid age');
-    if (S.bio.edu === '') miss.push('your education');
-    if (!S.consent) miss.push('the consent tick box');
-    hint = 'Still needed: ' + miss.join(', ') + '.';
+    if (S.bio.name.trim() === '') miss.push(t('needName'));
+    if (!v.ageOk) miss.push(t('needAge'));
+    if (S.bio.edu === '') miss.push(t('needEdu'));
+    if (!S.consent) miss.push(t('needConsent'));
+    hint = t('stillNeeded', { list: miss.join(', ') });
   }
   $('#startHint').textContent = hint;
 }
@@ -1387,8 +2292,8 @@ function renderRun() {
   const pct = Math.min(100, (S.idx / total) * 100);
   root.innerHTML = headerHtml() +
     '<div class="progress"><div class="bar"><span style="width:' + pct + '%"></span></div>' +
-    '<div class="plabel"><span>Question ' + (S.idx + 1) + ' of ' + total + '</span><span>' + Math.round(pct) + '% complete</span></div>' +
-    ((step.kind === 'span' || step.kind === 'speed') ? '<div class="muted small">Short task</div>' : '') + '</div>' +
+    '<div class="plabel"><span>' + esc(t('qOf', { i: S.idx + 1, n: total })) + '</span><span>' + esc(t('complete', { p: Math.round(pct) })) + '</span></div>' +
+    ((step.kind === 'span' || step.kind === 'speed') ? '<div class="muted small">' + esc(t('shortTask')) + '</div>' : '') + '</div>' +
     '<section class="card" id="panel"></section>';
   const panel = $('#panel');
   if (step.kind === 'mc') mountMC(step, panel);
@@ -1423,7 +2328,7 @@ function mountMC(step, panel) {
   panel.innerHTML = '<div class="prompt">' + esc(it.prompt) + '</div>' +
     (it.grid ? gridHtml(it.grid, !!it.pick) : '') +
     (!it.pick ? '<div class="opts">' + it.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '">' + esc(o) + '</button>'; }).join('') + '</div>' : '') +
-    '<div class="row"><button type="button" class="btn primary" id="confirm" disabled>Confirm answer</button><button type="button" class="btn" id="skip">Skip</button></div>';
+    '<div class="row"><button type="button" class="btn primary" id="confirm" disabled>' + esc(t('confirm')) + '</button><button type="button" class="btn" id="skip">' + esc(t('skip')) + '</button></div>';
   bindChoice(panel, it.pick ? '.cell' : '.opt', function (i) { sel = i; $('#confirm').disabled = false; });
   $('#confirm').addEventListener('click', function () { if (done || sel === null) return; done = true; answerAndNext(it.id, sel); });
   $('#skip').addEventListener('click', function () { if (done) return; done = true; answerAndNext(it.id, -1); });
@@ -1431,9 +2336,9 @@ function mountMC(step, panel) {
 function mountLikert(step, panel) {
   const it = step.item;
   let sel = null, done = false;
-  panel.innerHTML = '<div class="muted">How well does this describe you?</div><div class="prompt strong">' + esc(it.text) + '</div>' +
-    '<div class="opts">' + LIKERT.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '">' + (i + 1) + ' · ' + esc(o) + '</button>'; }).join('') + '</div>' +
-    '<div class="row"><button type="button" class="btn primary" id="confirm" disabled>Confirm answer</button><button type="button" class="btn" id="skip">Skip</button></div>';
+  panel.innerHTML = '<div class="muted">' + esc(t('likertQ')) + '</div><div class="prompt strong">' + esc(it.text) + '</div>' +
+    '<div class="opts">' + t('likert').map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '">' + (i + 1) + ' · ' + esc(o) + '</button>'; }).join('') + '</div>' +
+    '<div class="row"><button type="button" class="btn primary" id="confirm" disabled>' + esc(t('confirm')) + '</button><button type="button" class="btn" id="skip">' + esc(t('skip')) + '</button></div>';
   bindChoice(panel, '.opt', function (i) { sel = i; $('#confirm').disabled = false; });
   $('#confirm').addEventListener('click', function () { if (done || sel === null) return; done = true; answerAndNext(it.id, sel); });
   $('#skip').addEventListener('click', function () { if (done) return; done = true; answerAndNext(it.id, -1); });
@@ -1474,16 +2379,16 @@ function mountSpan(step, panel) {
   }
   function draw() {
     clearTimers();
-    const instr = dir === 'fwd' ? 'Memorise the digits, then type them in the same order.' : 'Memorise the digits, then type them in reverse order (last digit first).';
+    const instr = dir === 'fwd' ? t('spanFwd') : t('spanBack');
     if (phase === 'show') {
-      panel.innerHTML = '<p class="muted">' + instr + '</p><div class="digits">' + digits + '</div><p class="muted small">Watch closely · trial ' + trial + '</p>';
+      panel.innerHTML = '<p class="muted">' + esc(instr) + '</p><div class="digits">' + digits + '</div><p class="muted small">' + esc(t('watch', { n: trial })) + '</p>';
       timers.to = setTimeout(function () { phase = 'recall'; draw(); }, 900 + len * 800);
     } else {
       const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', 'Clear'];
-      panel.innerHTML = '<p class="muted">' + instr + '</p><div class="digits entry" id="entry"></div>' +
-        '<div class="keypad">' + keys.map(function (k) { return '<button type="button" class="key" data-k="' + k + '">' + k + '</button>'; }).join('') + '</div>' +
-        '<div class="row"><button type="button" class="btn primary" id="subm" disabled>Submit</button><button type="button" class="btn" id="skipd">Skip this one</button></div>' +
-        '<p class="muted small">Enter ' + len + ' digits · trial ' + trial + '</p>';
+      panel.innerHTML = '<p class="muted">' + esc(instr) + '</p><div class="digits entry" id="entry"></div>' +
+        '<div class="keypad">' + keys.map(function (k) { return '<button type="button" class="key" data-k="' + k + '">' + (k === 'Clear' ? esc(t('clear')) : k) + '</button>'; }).join('') + '</div>' +
+        '<div class="row"><button type="button" class="btn primary" id="subm" disabled>' + esc(t('submit')) + '</button><button type="button" class="btn" id="skipd">' + esc(t('skipOne')) + '</button></div>' +
+        '<p class="muted small">' + esc(t('enterN', { n: len, t: trial })) + '</p>';
       $$('.key', panel).forEach(function (el) {
         el.addEventListener('click', function () {
           const k = el.getAttribute('data-k');
@@ -1519,12 +2424,12 @@ function mountSpeed(step, panel) {
   function advance() { i += 1; if (i >= items.length) fin(); else drawItem(); }
   function drawItem() {
     const it = items[i];
-    panel.innerHTML = '<div class="tline"><span class="muted small">Time remaining</span><strong id="tleft">' + remaining() + 's</strong></div>' +
+    panel.innerHTML = '<div class="tline"><span class="muted small">' + esc(t('timeLeft')) + '</span><strong id="tleft">' + remaining() + 's</strong></div>' +
       '<div class="bar thin"><span id="tbar" style="width:' + (remaining() / total * 100) + '%"></span></div>' +
-      '<div class="muted small">Item ' + (i + 1) + ' of ' + items.length + '</div>' +
+      '<div class="muted small">' + esc(t('itemOf', { i: i + 1, n: items.length })) + '</div>' +
       '<div class="prompt strong">' + esc(it.prompt) + '</div>' +
       '<div class="opts two">' + it.options.map(function (o, k) { return '<button type="button" class="opt" data-i="' + k + '">' + esc(o) + '</button>'; }).join('') + '</div>' +
-      '<div class="row"><button type="button" class="btn" id="skipq">Skip</button></div>';
+      '<div class="row"><button type="button" class="btn" id="skipq">' + esc(t('skip')) + '</button></div>';
     $$('.opt', panel).forEach(function (el) {
       el.addEventListener('click', function () {
         if (finished) return;
@@ -1535,8 +2440,8 @@ function mountSpeed(step, panel) {
     });
     $('#skipq').addEventListener('click', function () { if (!finished) advance(); });
   }
-  panel.innerHTML = '<p>You will see up to ' + items.length + ' easy questions. Answer as many as you can, as accurately as you can, in ' + total + ' seconds. The clock starts when you press the button.</p>' +
-    '<button type="button" class="btn primary" id="go">Start the clock</button>';
+  panel.innerHTML = '<p>' + esc(t('speedIntro', { n: items.length, s: total })) + '</p>' +
+    '<button type="button" class="btn primary" id="go">' + esc(t('startClock')) + '</button>';
   $('#go').addEventListener('click', function () {
     endAt = Date.now() + total * 1000;
     drawItem();
@@ -1582,11 +2487,11 @@ function finishRun() {
 }
 function renderReview() {
   root.innerHTML = headerHtml() +
-    '<section class="card"><h2>All questions answered</h2>' +
-    '<p>Thank you for completing the assessment. Press <strong>Submit test</strong> to send your answers to your counsellor. Your results are not shown on this screen; your counsellor will share them with you.</p>' +
+    '<section class="card"><h2>' + esc(t('doneTitle')) + '</h2>' +
+    '<p>' + t('doneText') + '</p>' +
     (S.error ? '<div class="error">' + esc(S.error) + '</div>' : '') +
-    '<button type="button" class="btn primary" id="submitBtn"' + (S.submitting ? ' disabled' : '') + '>' + (S.submitting ? 'Submitting…' : (S.error ? 'Retry submit' : 'Submit test')) + '</button>' +
-    '<p class="muted small">Please keep this page open until you see the thank-you message.</p></section>';
+    '<button type="button" class="btn primary" id="submitBtn"' + (S.submitting ? ' disabled' : '') + '>' + esc(S.submitting ? t('submitting') : (S.error ? t('retry') : t('submitTest'))) + '</button>' +
+    '<p class="muted small">' + esc(t('keepOpen')) + '</p></section>';
   $('#submitBtn').addEventListener('click', submitTest);
 }
 function submitTest() {
@@ -1596,12 +2501,12 @@ function submitTest() {
   const notConfigured = !SHEET_URL || SHEET_URL.indexOf('PASTE_YOUR') === 0;
   if (notConfigured) {
     S.submitting = false;
-    S.error = 'This test is not connected to a results sheet yet. Please tell your counsellor. Your answers are kept on this page.';
+    S.error = t('errNoSheet');
     renderReview();
     return;
   }
   const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-  const t = ctrl ? setTimeout(function () { ctrl.abort(); }, 25000) : null;
+  const tmr = ctrl ? setTimeout(function () { ctrl.abort(); }, 25000) : null;
   fetch(SHEET_URL, {
     method: 'POST',
     mode: 'no-cors',
@@ -1609,19 +2514,19 @@ function submitTest() {
     body: JSON.stringify({ data: S.payload, reportText: S.text }),
     signal: ctrl ? ctrl.signal : undefined
   }).then(function () {
-    if (t) clearTimeout(t);
+    if (tmr) clearTimeout(tmr);
     S.submitting = false; S.submitted = true; S.phase = 'done';
     render();
   }).catch(function () {
-    if (t) clearTimeout(t);
+    if (tmr) clearTimeout(tmr);
     S.submitting = false;
-    S.error = 'We could not send your test. Please check your internet connection and try again. Your answers are kept on this page.';
+    S.error = t('errSend');
     renderReview();
   });
 }
 function renderDone() {
   root.innerHTML = headerHtml() +
-    '<section class="card center"><h2>Thank you</h2><p class="big">Thank you, your test has been submitted. Your counsellor will share your results with you.</p></section>' +
+    '<section class="card center"><h2>' + esc(t('thanksTitle')) + '</h2><p class="big">' + esc(t('thanksText')) + '</p></section>' +
     (DEBUG_PREVIEW ? '<section class="card"><h2>Debug preview</h2><pre>' + esc(S.text) + '</pre></section>' : '');
 }
 

@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Mind &amp; IQ Assessment</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#14181f;--muted:#5b6472;--line:#dde1e8;--accent:#2457d6;--accentSoft:#e8eefc;--err:#b3261e;--errBg:#fdecea;--noteBg:#eef3ff}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1218;--card:#181c24;--text:#eef1f6;--muted:#9aa4b5;--line:#2b313c;--accent:#7aa2ff;--accentSoft:#1f2a45;--err:#ff8a80;--errBg:#3a1b19;--noteBg:#1b2438}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+#app{max-width:720px;margin:0 auto;padding:16px 16px 48px;display:flex;flex-direction:column;gap:16px}
+.top h1{margin:8px 0 0;font-size:26px;line-height:1.2}
+.sub{margin:4px 0 0;color:var(--muted)}
+h2{margin:0 0 8px;font-size:19px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.card.center{text-align:center;padding:40px 20px}
+.notice{background:var(--noteBg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--muted)}
+.notice strong{color:var(--text)}
+.muted{color:var(--muted)}.small{font-size:13px}.big{font-size:18px;font-weight:600;margin:0}
+p{margin:0}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+.field input,.field select{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 12px;width:100%}
+.field input:focus,.field select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.segs{display:flex;flex-wrap:wrap;gap:6px}
+.seg{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:999px;padding:8px 14px;cursor:pointer}
+.seg.sel{background:var(--accentSoft);border-color:var(--accent);color:var(--text)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--text)}
+.check input{margin-top:4px;width:18px;height:18px;flex:none}
+.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:12px 18px;cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme:dark){.btn.primary{color:#0b1020}}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.err{color:var(--err);font-size:14px}
+.error{background:var(--errBg);color:var(--err);border-radius:10px;padding:12px 14px;font-size:14px}
+.progress{display:flex;flex-direction:column;gap:6px}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar.thin{height:6px}
+.bar span{display:block;height:100%;background:var(--accent)}
+.plabel{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted)}
+.tline{display:flex;justify-content:space-between;align-items:baseline}
+.prompt{white-space:pre-line;font-size:17px}
+.prompt.strong{font-size:19px;font-weight:600}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opts.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.opt{font:inherit;text-align:left;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:12px;padding:12px 14px;cursor:pointer;width:100%}
+.opt.sel,.cell.sel{background:var(--accentSoft);border-color:var(--accent)}
+.grid{display:grid;gap:6px;margin:0 auto;width:100%}
+.cell{display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--text);font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all;text-align:center;padding:2px}
+button.cell{cursor:pointer}
+.cell.q{background:var(--line);border-color:var(--muted)}
+.digits{min-height:110px;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:42px;letter-spacing:.3em;border:1px solid var(--line);border-radius:12px;padding-left:.3em}
+.digits.entry{font-size:34px}
+.keypad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-width:300px;width:100%;margin:0 auto}
+.key{font:inherit;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:20px;min-height:50px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--text);cursor:pointer}
+pre{white-space:pre-wrap;font-size:13px;margin:0}
+@media (max-width:480px){.digits{font-size:34px}.top h1{font-size:22px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* =====================================================================
+   SETTINGS - edit these three lines
+   ===================================================================== */
+const APP_NAME = 'Mind & IQ Assessment';          // change this to rename the app everywhere
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbx5D8w-Tn8vwhduQwQElFb66NmnKl6EZ0t0SBMyrDKECu6CP0_Pwnk-cGqCdMaHSfY/exec'; // paste your Google Apps Script web app URL here
+const DEBUG_PREVIEW = false;                       // keep false. true shows the report to the client (testing only)
+/* ===================================================================== */
+const TEST_VERSION = 'MIQ 3.0 (60-question adaptive screening)';
+
+/* ===== Helpers ===== */
+function ri(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function sample(arr, n) { return shuffle(arr).slice(0, n); }
+let uidc = 0;
+function uid() { uidc += 1; return 'q' + uidc; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function erf(x0) {
+  const s = x0 < 0 ? -1 : 1;
+  const x = Math.abs(x0);
+  const t = 1 / (1 + 0.3275911 * x);
+  const y = 1 - (((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t) * Math.exp(-x * x);
+  return s * y;
+}
+function cdf(z) { return 0.5 * (1 + erf(z / Math.SQRT2)); }
+function ord(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+function pc(v) { return Math.round(v * 100); }
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+/* ===== Constants ===== */
+const BANDS = [
+  { label: '15–17', lvl: 1, mu: 0.58, sd: 0.16 },
+  { label: '18–24', lvl: 2, mu: 0.6, sd: 0.16 },
+  { label: '25–34', lvl: 3, mu: 0.6, sd: 0.16 },
+  { label: '35–44', lvl: 3, mu: 0.58, sd: 0.16 },
+  { label: '45–55', lvl: 3, mu: 0.56, sd: 0.16 }
+];
+function bandForAge(age) {
+  if (age <= 17) return BANDS[0];
+  if (age <= 24) return BANDS[1];
+  if (age <= 34) return BANDS[2];
+  if (age <= 44) return BANDS[3];
+  return BANDS[4];
+}
+const SPEED_SECS = 35;
+const SPEED_N = 12;
+const STARTER_N = 5;
+const LEVEL_NAMES = ['', 'easier', 'medium', 'harder'];
+const AREA_SECS = { num: 30, verb: 20, logic: 35, pat: 35, attn: 15, power: 60, per: 25, und: 15, man: 30 };
+
+/* ===== Item builders ===== */
+function makeMC(correct, wrongs) {
+  const u = [];
+  for (const w of wrongs) { if (w !== correct && u.indexOf(w) < 0) u.push(w); }
+  const opts = shuffle([correct].concat(u.slice(0, 3)));
+  return { options: opts, answer: opts.indexOf(correct) };
+}
+function mcItem(area, prompt, correct, wrongs, grid) {
+  const m = makeMC(correct, wrongs);
+  return { id: uid(), area: area, prompt: prompt, options: m.options, answer: m.answer, grid: grid };
+}
+function numItem(area, prompt, ans, hints, grid) {
+  const ok = function (v) { return Number.isFinite(v) && v !== ans && (ans < 0 || v >= 0); };
+  const hs = shuffle(hints.map(function (h) { return Math.round(h); })).filter(ok).slice(0, 2);
+  const ds = shuffle([1, 2, 3, 4, 5, 6, 8, 10, -1, -2, -3, -4, -5, -6, -8, -10]).map(function (d) { return ans + d; }).filter(ok);
+  return mcItem(area, prompt, String(ans), hs.concat(ds).map(String), grid);
+}
+
+/* number series */
+function genSeries(level) {
+  const kinds = level <= 1 ? ['arith', 'geom', 'grow']
+    : level === 2 ? ['arith2', 'geom', 'grow', 'fib', 'affine', 'alt', 'sq']
+    : ['fib', 'affine', 'alt', 'sq', 'inter', 'dd', 'cube', 'grow'];
+  const kind = pick(kinds);
+  const seq = [];
+  if (kind === 'arith') {
+    const s = ri(1, 40), d = ri(2, 9);
+    for (let i = 0; i < 6; i++) seq.push(s + i * d);
+  } else if (kind === 'arith2') {
+    const s = ri(3, 40), d = ri(4, 13);
+    for (let i = 0; i < 6; i++) seq.push(s + i * d);
+  } else if (kind === 'geom') {
+    const r = pick(level >= 2 ? [2, 3, 4] : [2, 3]);
+    const s = ri(1, 4);
+    const total = r === 2 ? 6 : 5;
+    for (let i = 0; i < total; i++) seq.push(s * Math.pow(r, i));
+  } else if (kind === 'grow') {
+    const s = ri(1, 9), d0 = ri(1, 3), dd = ri(1, 3);
+    seq.push(s);
+    for (let i = 1; i < 6; i++) seq.push(seq[i - 1] + d0 + (i - 1) * dd);
+  } else if (kind === 'fib') {
+    seq.push(ri(1, 5)); seq.push(ri(1, 7));
+    for (let i = 2; i < 7; i++) seq.push(seq[i - 1] + seq[i - 2]);
+  } else if (kind === 'affine') {
+    const s = ri(2, 5), m = pick([2, 3]), c = pick([-1, 1, 2, 3]);
+    const total = m === 3 ? 5 : 6;
+    seq.push(s);
+    for (let i = 1; i < total; i++) seq.push(seq[i - 1] * m + c);
+  } else if (kind === 'alt') {
+    const a = ri(4, 9), b = ri(1, a - 2);
+    seq.push(ri(5, 30));
+    for (let i = 1; i < 7; i++) seq.push(seq[i - 1] + (i % 2 === 1 ? a : -b));
+  } else if (kind === 'sq') {
+    const k = ri(1, 5), c = pick([-1, 0, 1, 2, 3, 5]);
+    for (let i = 0; i < 6; i++) seq.push((i + k) * (i + k) + c);
+  } else if (kind === 'inter') {
+    const s1 = ri(2, 12), d1 = ri(2, 5);
+    const useGeo = Math.random() < 0.5;
+    const s2 = useGeo ? ri(1, 3) : ri(30, 50);
+    const d2 = ri(2, 5);
+    for (let i = 0; i < 8; i++) {
+      if (i % 2 === 0) seq.push(s1 + (i / 2) * d1);
+      else { const j = (i - 1) / 2; seq.push(useGeo ? s2 * Math.pow(2, j) : s2 - j * d2); }
+    }
+  } else if (kind === 'dd') {
+    const d = ri(1, 3);
+    seq.push(ri(1, 6));
+    for (let i = 1; i < 6; i++) seq.push(seq[i - 1] + d * Math.pow(2, i - 1));
+  } else {
+    const k = ri(1, 2);
+    for (let i = 0; i < 5; i++) seq.push(Math.pow(i + k, 3));
+  }
+  const ans = seq[seq.length - 1];
+  const shown = seq.slice(0, seq.length - 1);
+  const last = shown[shown.length - 1], prev = shown[shown.length - 2];
+  return { shown: shown, ans: ans, hint: last + (last - prev) };
+}
+function seriesItem(area, level) {
+  const g = genSeries(level);
+  return numItem(area, g.shown.join(',  ') + ',  ?\nWhat number comes next in the series?', g.ans, [g.hint, g.ans + 1, g.ans - 1]);
+}
+
+/* letter series */
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function genLetters(level) {
+  const kinds = level <= 1 ? ['step', 'back'] : level === 2 ? ['step', 'alt', 'back'] : ['alt', 'inter', 'grow'];
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const kind = pick(kinds);
+    const idx = [];
+    if (kind === 'step') {
+      const d = ri(2, 4), s = ri(0, 25 - 5 * d);
+      for (let i = 0; i < 6; i++) idx.push(s + i * d);
+    } else if (kind === 'back') {
+      const d = ri(2, 4), s = ri(5 * d, 25);
+      for (let i = 0; i < 6; i++) idx.push(s - i * d);
+    } else if (kind === 'alt') {
+      const a = ri(1, 4), b = ri(2, 5);
+      idx.push(ri(0, 8));
+      for (let i = 1; i < 7; i++) idx.push(idx[i - 1] + (i % 2 === 1 ? a : b));
+    } else if (kind === 'inter') {
+      const s1 = ri(0, 8), s2 = ri(16, 25), d1 = ri(1, 2), d2 = ri(1, 2);
+      for (let i = 0; i < 8; i++) {
+        if (i % 2 === 0) idx.push(s1 + (i / 2) * d1);
+        else idx.push(s2 - ((i - 1) / 2) * d2);
+      }
+    } else {
+      idx.push(ri(0, 10));
+      for (let i = 1; i < 6; i++) idx.push(idx[i - 1] + i);
+    }
+    if (idx.every(function (v) { return v >= 0 && v <= 25; })) {
+      const letters = idx.map(function (v) { return ALPHA[v]; });
+      return { shown: letters.slice(0, letters.length - 1), ans: letters[letters.length - 1] };
+    }
+  }
+  return { shown: ['A', 'C', 'E', 'G', 'I'], ans: 'K' };
+}
+function letterItem(level) {
+  const g = genLetters(level);
+  const ai = ALPHA.indexOf(g.ans);
+  const wrongs = [];
+  for (const d of shuffle([1, -1, 2, -2, 3, -3])) {
+    const v = ai + d;
+    if (v >= 0 && v <= 25) wrongs.push(ALPHA[v]);
+  }
+  return mcItem('pat', g.shown.join(',  ') + ',  ?\nWhich letter comes next in the series?', g.ans, wrongs);
+}
+
+/* matrices */
+const SYM6 = ['●', '■', '▲', '◆', '★', '✚'];
+const DIRS = ['↑', '→', '↓', '←'];
+function matrixItem(area, level) {
+  const kinds = level <= 1 ? ['latin', 'count']
+    : level === 2 ? ['latin', 'count', 'sum', 'arrows', 'diff']
+    : ['count', 'product', 'grid', 'mult', 'arrows', 'sum'];
+  const kind = pick(kinds);
+  const prompt = 'Each row and column follows a rule. Which option replaces the “?” to complete the grid?';
+  if (kind === 'latin') {
+    const syms = sample(SYM6, 3);
+    const rowsBase = shuffle([[0, 1, 2], [1, 2, 0], [2, 0, 1]]);
+    const cells = [];
+    for (const row of rowsBase) for (const c of row) cells.push(syms[c]);
+    const ans = cells[8];
+    cells[8] = '?';
+    const extra = SYM6.filter(function (s) { return syms.indexOf(s) < 0; });
+    return mcItem(area, prompt, ans, syms.filter(function (s) { return s !== ans; }).concat([pick(extra)]), { cols: 3, cells: cells, font: 28 });
+  }
+  if (kind === 'count') {
+    const g = pick(['●', '■', '▲', '◆', '★']);
+    let base = 1, a = 1, b = 1;
+    for (let t = 0; t < 100; t++) {
+      base = ri(1, 2); a = ri(0, 2); b = ri(1, 2);
+      if (a + b >= 2 && base + 2 * a + 2 * b <= 9) break;
+      base = 1; a = 1; b = 1;
+    }
+    const cells = [];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) cells.push(g.repeat(base + r * a + c * b));
+    const n = base + 2 * a + 2 * b;
+    cells[8] = '?';
+    const wrongs = [];
+    for (const d of shuffle([1, -1, 2, -2, 3, -3])) {
+      const v = n + d;
+      if (v >= 1 && v <= 12) wrongs.push(g.repeat(v));
+    }
+    return mcItem(area, prompt, g.repeat(n), wrongs, { cols: 3, cells: cells, font: 14, minH: 56 });
+  }
+  if (kind === 'sum' || kind === 'diff' || kind === 'product') {
+    const cells = [];
+    let last = 0, hint = 0;
+    for (let r = 0; r < 3; r++) {
+      let x, y, z;
+      if (kind === 'sum') { x = ri(2, 15); y = ri(2, 15); z = x + y; }
+      else if (kind === 'diff') { x = ri(15, 60); y = ri(3, x - 3); z = x - y; }
+      else { x = ri(2, 9); y = ri(2, 9); z = x * y; }
+      cells.push(String(x), String(y), r === 2 ? '?' : String(z));
+      if (r === 2) { last = z; hint = kind === 'sum' ? x * y : x + y; }
+    }
+    return numItem(area, prompt, last, [hint], { cols: 3, cells: cells, font: 22 });
+  }
+  if (kind === 'grid') {
+    const base = ri(1, 9), a = ri(2, 7), b = ri(1, 6);
+    const cells = [];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) cells.push(String(base + r * a + c * b));
+    const ans = base + 2 * a + 2 * b;
+    cells[8] = '?';
+    return numItem(area, prompt, ans, [ans + a, ans - b], { cols: 3, cells: cells, font: 22 });
+  }
+  if (kind === 'mult') {
+    const k = ri(1, 3);
+    const cells = [];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) cells.push(String((r + 1) * (c + 1) * k));
+    cells[8] = '?';
+    return numItem(area, prompt, 9 * k, [8 * k, 6 * k], { cols: 3, cells: cells, font: 22 });
+  }
+  const s0 = ri(0, 3), s1 = pick([1, 3]), s2 = ri(1, 3);
+  const cells = [];
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) cells.push(DIRS[(s0 + r * s2 + c * s1) % 4]);
+  const ans = cells[8];
+  cells[8] = '?';
+  return mcItem(area, prompt, ans, DIRS.filter(function (d) { return d !== ans; }), { cols: 3, cells: cells, font: 30 });
+}
+
+/* verbal banks: [stem, correct, w1, w2, w3, level] */
+const ANALOGIES = [
+  ["Bird is to nest as bee is to …","hive","honey","wing","flower",1],
+  ["Hot is to cold as day is to …","night","sun","light","morning",1],
+  ["Finger is to hand as toe is to …","foot","shoe","leg","nail",1],
+  ["Book is to read as food is to …","eat","kitchen","plate","buy",1],
+  ["Doctor is to hospital as teacher is to …","school","lesson","student","library",1],
+  ["Puppy is to dog as kitten is to …","cat","milk","fur","mouse",1],
+  ["Pen is to write as knife is to …","cut","sharp","fork","kitchen",1],
+  ["Eye is to see as ear is to …","hear","sound","head","music",1],
+  ["Ring is to finger as bracelet is to …","wrist","neck","ear","gold",2],
+  ["Author is to novel as composer is to …","symphony","orchestra","instrument","concert",2],
+  ["Thermometer is to temperature as ruler is to …","length","wood","straight","desk",2],
+  ["Brave is to cowardly as generous is to …","selfish","kind","rich","careful",2],
+  ["Painter is to canvas as sculptor is to …","marble","gallery","brush","paint",2],
+  ["Fish is to school as wolf is to …","pack","forest","howl","pup",2],
+  ["Drought is to water as famine is to …","food","hunger","farm","rain",2],
+  ["Seed is to tree as egg is to …","chick","nest","shell","hen",2],
+  ["Prologue is to epilogue as overture is to …","finale","opera","interval","melody",3],
+  ["Candid is to frank as cautious is to …","wary","bold","reckless","hasty",3],
+  ["Lock is to key as problem is to …","solution","puzzle","question","door",3],
+  ["Frugal is to miserly as confident is to …","arrogant","shy","capable","humble",3],
+  ["Cacophony is to harmony as chaos is to …","order","noise","music","disorder",3],
+  ["Ephemeral is to permanent as scarce is to …","abundant","rare","precious","small",3],
+  ["Marathon is to sprint as epic is to …","haiku","novel","ballad","drama",3],
+  ["Pilot is to aircraft as captain is to …","ship","crew","sea","harbour",3],
+  ["Telescope is to distant as microscope is to …","tiny","lens","bright","scientist",3],
+  ["Sun is to day as moon is to …","night","summer","water","heat",1],
+  ["Hand is to glove as foot is to …","sock","knee","toe","walk",1],
+  ["Cow is to milk as hen is to …","egg","feather","farm","grain",1],
+  ["Roti is to eat as water is to …","drink","wet","river","glass",1],
+  ["Car is to road as train is to …","track","engine","station","ticket",1],
+  ["Tiger is to cub as horse is to …","foal","mare","stable","saddle",1],
+  ["Teacher is to student as doctor is to …","patient","nurse","medicine","clinic",1],
+  ["Winter is to cold as summer is to …","hot","rain","wool","ice",1],
+  ["Fan is to air as lamp is to …","light","bulb","switch","wire",1],
+  ["Left is to right as up is to …","down","high","top","sky",1],
+  ["Cotton is to cloth as wood is to …","furniture","tree","forest","axe",1],
+  ["Clock is to time as scale is to …","weight","shop","heavy","metal",1],
+  ["Light is to dark as noisy is to …","quiet","loud","sound","busy",1],
+  ["Flower is to petal as tree is to …","leaf","forest","garden","shade",1],
+  ["Gram is to weight as metre is to …","length","tape","cloth","speed",2],
+  ["Astronomer is to telescope as biologist is to …","microscope","laboratory","cell","doctor",2],
+  ["Shiver is to cold as sweat is to …","heat","water","summer","skin",2],
+  ["Cricket is to bat as hockey is to …","stick","ball","goal","field",2],
+  ["Tributary is to river as branch is to …","tree","leaf","root","forest",2],
+  ["Whisper is to shout as walk is to …","run","step","road","shoe",2],
+  ["Kilometre is to distance as litre is to …","volume","liquid","water","bottle",2],
+  ["Judge is to court as surgeon is to …","operating theatre","scalpel","medicine","nurse",2],
+  ["Sapling is to tree as cub is to …","lion","forest","claw","roar",2],
+  ["Rupee is to India as yen is to …","Japan","China","Korea","Thailand",2],
+  ["Chapter is to book as scene is to …","play","actor","stage","audience",2],
+  ["Lamp is to oil as car is to …","petrol","engine","wheel","road",2],
+  ["Harvest is to autumn as bloom is to …","spring","winter","rain","garden",2],
+  ["Verbose is to concise as lavish is to …","frugal","generous","luxurious","wealthy",3],
+  ["Hypothesis is to experiment as plan is to …","implementation","idea","goal","paper",3],
+  ["Diligent is to lazy as transparent is to …","opaque","clear","glass","thin",3],
+  ["Amend is to law as edit is to …","manuscript","pen","printer","library",3],
+  ["Antidote is to poison as remedy is to …","ailment","doctor","pharmacy","bitter",3],
+  ["Architect is to blueprint as composer is to …","score","audience","piano","studio",3],
+  ["Symptom is to disease as clue is to …","mystery","detective","footprint","magnifying glass",3],
+  ["Amateur is to professional as apprentice is to …","master","student","worker","beginner",3],
+  ["Decade is to century as month is to …","year","week","day","season",3],
+  ["Entomology is to insects as ornithology is to …","birds","fish","rocks","plants",3],
+  ["Catalyst is to reaction as spark is to …","fire","smoke","match","heat",3],
+  ["Sceptic is to doubt as optimist is to …","hope","fear","joy","trust",3],
+  ["Monarch is to kingdom as principal is to …","school","teacher","student","board",3],
+];
+function od(same, odd, lvl) { return { same: same.split(', '), odd: odd, lvl: lvl }; }
+const ODDS = [
+  od("apple, banana, cherry, grape", "carrot", 1),
+  od("dog, cat, horse, rabbit", "sparrow", 1),
+  od("red, blue, green, yellow", "circle", 1),
+  od("table, chair, sofa, bed", "window", 1),
+  od("London, Paris, Rome, Madrid", "Danube", 1),
+  od("hammer, saw, drill, spanner", "pillow", 1),
+  od("piano, guitar, violin, flute", "painting", 1),
+  od("triangle, square, pentagon, hexagon", "circle", 2),
+  od("2, 3, 5, 7", "9", 2),
+  od("4, 9, 16, 25", "20", 2),
+  od("sparrow, eagle, owl, robin", "bat", 2),
+  od("copper, iron, zinc, tin", "glass", 2),
+  od("sprint, jog, run, dash", "stroll", 2),
+  od("whale, dolphin, seal, porpoise", "shark", 2),
+  od("ounce, gram, pound, kilogram", "litre", 2),
+  od("cube, sphere, cone, cylinder", "square", 2),
+  od("Rembrandt, Monet, Picasso, Vermeer", "Mozart", 2),
+  od("violin, viola, cello, harp", "trumpet", 2),
+  od("inflate, expand, swell, enlarge", "shrink", 2),
+  od("2, 4, 8, 16", "24", 3),
+  od("121, 144, 169, 196", "150", 3),
+  od("metaphor, simile, alliteration, hyperbole", "paragraph", 3),
+  od("sonnet, haiku, limerick, ode", "novella", 3),
+  od("democracy, monarchy, republic, oligarchy", "capitalism", 3),
+  od("abundant, plentiful, ample, copious", "meagre", 3),
+  od("lucid, clear, transparent, limpid", "opaque", 3),
+  od("mango, banana, guava, papaya", "potato", 1),
+  od("lion, tiger, leopard, cheetah", "elephant", 1),
+  od("Hindi, Tamil, Bengali, Marathi", "French", 1),
+  od("cricket, football, hockey, tennis", "painting", 1),
+  od("Delhi, Mumbai, Chennai, Kolkata", "Ganga", 1),
+  od("shirt, trousers, kurta, jacket", "spoon", 1),
+  od("rose, lotus, jasmine, marigold", "banyan", 1),
+  od("Monday, Tuesday, Friday, Sunday", "January", 1),
+  od("spoon, fork, knife, ladle", "umbrella", 1),
+  od("doctor, nurse, surgeon, pharmacist", "carpenter", 1),
+  od("bus, train, aeroplane, ship", "sofa", 1),
+  od("ear, eye, nose, tongue", "shoe", 1),
+  od("milk, curd, butter, paneer", "rice", 1),
+  od("kilometre, metre, centimetre, millimetre", "kilogram", 1),
+  od("one, three, five, seven", "four", 1),
+  od("iron, copper, aluminium, silver", "plastic", 2),
+  od("carbon, oxygen, nitrogen, hydrogen", "water", 2),
+  od("walk, run, jog, march", "sleep", 2),
+  od("6, 12, 18, 24", "28", 2),
+  od("Tagore, Premchand, Bankim Chandra, Kalidasa", "Ramanujan", 2),
+  od("Ganga, Yamuna, Brahmaputra, Godavari", "Vindhya", 2),
+  od("bronze, brass, steel, solder", "copper", 2),
+  od("run, jump, swim, climb", "tall", 2),
+  od("11, 13, 17, 19", "21", 2),
+  od("Jupiter, Saturn, Uranus, Neptune", "Mars", 3),
+  od("12, 18, 30, 42", "25", 3),
+  od("1, 8, 27, 64", "100", 3),
+  od("helium, neon, argon, krypton", "nitrogen", 3),
+  od("mammal, reptile, amphibian, bird", "insect", 3),
+  od("anger, fear, sadness, disgust", "joy", 3),
+  od("noun, verb, adjective, adverb", "sentence", 3),
+  od("aorta, vein, artery, capillary", "kidney", 3),
+  od("thermometer, barometer, speedometer, ammeter", "telescope", 3),
+  od("rupee, dollar, yen, euro", "inflation", 3),
+  od("fiction, biography, poetry, drama", "dictionary", 3),
+  od("algorithm, program, software, code", "keyboard", 3),
+  od("rapid, swift, brisk, hasty", "sluggish", 3),
+  od("benevolent, charitable, generous, kind", "miserly", 3),
+  od("Plato, Aristotle, Socrates, Kant", "Beethoven", 3),
+];
+const LOGICS = [
+  {"p":"If the alarm sounds, the door locks automatically.\nThe door is not locked.\nWhich conclusion must be true?","c":"The alarm did not sound","w":["The alarm sounded","The alarm is broken","Nothing can be concluded"],"lvl":2},
+  {"p":"If the alarm sounds, the door locks automatically.\nThe door is locked.\nWhich conclusion must be true?","c":"Nothing definite can be said about whether the alarm sounded","w":["The alarm sounded","The alarm did not sound","The door was locked by hand"],"lvl":3},
+  {"p":"Every manager attended the meeting.\nPriya did not attend the meeting.\nWhich conclusion must be true?","c":"Priya is not a manager","w":["Priya is a manager","Priya was on holiday","Some managers missed the meeting"],"lvl":2},
+  {"p":"No reptiles have fur.\nSome pets are reptiles.\nWhich conclusion must be true?","c":"Some pets do not have fur","w":["All pets have fur","No pets are reptiles","Some reptiles have fur"],"lvl":2},
+  {"p":"Either the train is late or Sam is early.\nSam is not early.\nWhich conclusion must be true?","c":"The train is late","w":["The train is not late","Sam is late","Nothing can be concluded"],"lvl":1},
+  {"p":"Every choir member can read music.\nSome people who read music play the piano.\nWhich statement must be true?","c":"None of the other statements must be true","w":["Some choir members play the piano","Every pianist is in the choir","No choir member plays the piano"],"lvl":3},
+  {"p":"Anyone who revises will pass the test.\nDev did not pass the test.\nWhich conclusion must be true?","c":"Dev did not revise","w":["Dev revised","Dev was unlucky","Nothing can be concluded"],"lvl":2},
+  {"p":"Only members may enter the club.\nLena entered the club.\nWhich conclusion must be true?","c":"Lena is a member","w":["Lena is not a member","Every member entered the club","Lena owns the club"],"lvl":3},
+  {"p":"All squares are rectangles.\nSome rectangles are red.\nWhich statement must be true?","c":"It is not certain that any square is red","w":["Some squares are red","All rectangles are squares","No square is red"],"lvl":3},
+  {"p":"If it is a weekday, the shop opens at 8 o’clock.\nToday the shop did not open at 8 o’clock.\nWhich conclusion must be true?","c":"Today is not a weekday","w":["Today is a weekday","The shop was closed all day","The owner overslept"],"lvl":3},
+  {"p":"Some artists are musicians.\nAll musicians are creative.\nWhich conclusion must be true?","c":"Some artists are creative","w":["All artists are creative","No artist is creative","All creative people are musicians"],"lvl":2},
+  {"p":"Neither Tom nor Uma owns a car.\nVik owns a car if, and only if, Tom owns a car.\nWhich conclusion must be true?","c":"Vik does not own a car","w":["Vik owns a car","Uma borrows Vik’s car","Nothing can be concluded"],"lvl":3},
+  {"p":"No runner in the top three wore red.\nMia wore red.\nWhich conclusion must be true?","c":"Mia was not in the top three","w":["Mia won the race","Mia finished fourth","Everyone else wore blue"],"lvl":1},
+  {"p":"All the plants in the greenhouse need shade.\nThis fern does not need shade.\nWhich conclusion must be true?","c":"This fern is not in the greenhouse","w":["This fern is in the greenhouse","The greenhouse has no shade","All ferns need sunlight"],"lvl":2},
+  {"p":"If the battery is flat, the car will not start.\nThe car started.\nWhich conclusion must be true?","c":"The battery is not flat","w":["The battery is flat","The car has a full tank","Nothing can be concluded"],"lvl":1},
+  {"p":"All the students in Class 8B passed the test.\nAarav is in Class 8B.\nWhich conclusion must be true?","c":"Aarav passed the test","w":["Aarav scored the highest marks","Aarav is the class monitor","Aarav failed the test"],"lvl":1},
+  {"p":"If it rains, the match will be cancelled.\nIt is raining.\nWhich conclusion must be true?","c":"The match will be cancelled","w":["The match will be played","The rain will stop soon","Nothing can be concluded"],"lvl":1},
+  {"p":"Ritu is taller than Sana.\nSana is taller than Tara.\nWho is the shortest?","c":"Tara","w":["Ritu","Sana","Cannot be determined"],"lvl":1},
+  {"p":"Every train from Platform 2 goes to Pune.\nThe 6:15 train is leaving from Platform 2.\nWhere is it going?","c":"Pune","w":["Mumbai","Nashik","Cannot be said"],"lvl":1},
+  {"p":"No cat in the shop is white.\nMilo is a cat in the shop.\nWhich conclusion must be true?","c":"Milo is not white","w":["Milo is white","Milo is black","Milo is the only cat"],"lvl":1},
+  {"p":"A bag has only red and blue marbles.\nThe marble drawn is not red.\nWhat colour is it?","c":"Blue","w":["Red","Green","Cannot be said"],"lvl":1},
+  {"p":"If Meena finishes her homework, she is allowed to watch TV.\nMeena finished her homework.\nWhich conclusion must be true?","c":"Meena is allowed to watch TV","w":["Meena is watching TV now","Meena likes TV","Meena is not allowed to watch TV"],"lvl":1},
+  {"p":"Dev is older than Karan.\nKaran is older than Joy.\nWhich statement must be true?","c":"Dev is older than Joy","w":["Joy is older than Dev","Dev and Joy are the same age","Karan is the oldest"],"lvl":1},
+  {"p":"All the mangoes in the basket are ripe.\nThis fruit is a mango from the basket.\nWhich conclusion must be true?","c":"This fruit is ripe","w":["This fruit is raw","All the fruit in the basket is mango","This fruit is the biggest"],"lvl":1},
+  {"p":"The shop is closed on Sundays.\nToday is Sunday.\nWhich conclusion is certain?","c":"The shop is closed today","w":["The shop is open today","The shop is closed every day","The owner is on holiday"],"lvl":1},
+  {"p":"Either Asha or Bilal ate the last laddoo.\nAsha did not eat it.\nWho ate it?","c":"Bilal","w":["Asha","Both of them","Neither of them"],"lvl":1},
+  {"p":"Rohan has more marbles than Imran.\nImran has more marbles than Sunil.\nWho has the fewest marbles?","c":"Sunil","w":["Rohan","Imran","Cannot be determined"],"lvl":1},
+  {"p":"A farmer has only cows and goats.\nHe has 12 animals in all, and 7 of them are cows.\nHow many goats does he have?","c":"5","w":["4","6","19"],"lvl":1},
+  {"p":"Some students in the class play cricket.\nAll the students in the class are students of the school.\nWhich conclusion must be true?","c":"Some students of the school play cricket","w":["All students of the school play cricket","No student of the school plays cricket","Every cricket player is in the class"],"lvl":1},
+  {"p":"The exam is on the day after Tuesday.\nOn which day is the exam?","c":"Wednesday","w":["Thursday","Monday","Friday"],"lvl":1},
+  {"p":"Anu is standing in a queue.\nThere are 3 people in front of her and 2 people behind her.\nHow many people are in the queue?","c":"6","w":["5","7","4"],"lvl":1},
+  {"p":"All crows are black.\nThis bird is not black.\nWhich conclusion must be true?","c":"This bird is not a crow","w":["This bird is a crow","This bird is a sparrow","This bird is white"],"lvl":1},
+  {"p":"Neha’s birthday comes before Om’s.\nOm’s birthday comes before Pia’s.\nWhose birthday comes last?","c":"Pia’s","w":["Neha’s","Om’s","Cannot be determined"],"lvl":1},
+  {"p":"Every ticket for the concert is numbered.\nRiya has a ticket for the concert.\nWhich conclusion must be true?","c":"Riya’s ticket is numbered","w":["Riya’s ticket is number 1","Riya sits in the front row","Riya bought her ticket online"],"lvl":1},
+  {"p":"Today is Friday.\nThe party is in two days’ time.\nOn which day is the party?","c":"Sunday","w":["Saturday","Monday","Tuesday"],"lvl":1},
+  {"p":"The red box is heavier than the blue box.\nThe green box is lighter than the blue box.\nWhich box is the heaviest?","c":"The red box","w":["The blue box","The green box","Cannot be determined"],"lvl":1},
+  {"p":"If you press the red button, the fan turns on.\nThe fan did not turn on.\nWhich conclusion must be true?","c":"The red button was not pressed","w":["The red button was pressed","The fan is broken","The green button was pressed"],"lvl":2},
+  {"p":"No teacher in the school is under 21 years old.\nSunita is a teacher in the school.\nWhich conclusion must be true?","c":"Sunita is 21 or older","w":["Sunita is exactly 21","Sunita is over 30","Sunita is a new teacher"],"lvl":2},
+  {"p":"If the power is cut, the lift stops.\nThe lift is working.\nWhich conclusion must be true?","c":"The power has not been cut","w":["The power has been cut","The lift is new","Nothing can be concluded"],"lvl":2},
+  {"p":"Every member of the cricket team practises daily.\nMohit practises daily.\nWhich conclusion must be true?","c":"Nothing definite can be said about whether Mohit is in the team","w":["Mohit is in the team","Mohit is the captain","Mohit is not in the team"],"lvl":2},
+  {"p":"All the rooms on the third floor have balconies.\nRoom 305 does not have a balcony.\nWhich conclusion must be true?","c":"Room 305 is not on the third floor","w":["Room 305 is on the third floor","Room 305 is the smallest room","No room on the third floor has a balcony"],"lvl":2},
+  {"p":"Ravi is faster than Sam.\nTina is slower than Sam.\nUma is faster than Ravi.\nWho is the slowest?","c":"Tina","w":["Sam","Ravi","Uma"],"lvl":2},
+  {"p":"Either the bus is late or the road is blocked, but not both.\nThe road is not blocked.\nWhich conclusion must be true?","c":"The bus is late","w":["The bus is on time","Both are true","Nothing can be concluded"],"lvl":2},
+  {"p":"Some books in the library are novels.\nAll the novels in the library are fiction.\nWhich conclusion must be true?","c":"Some books in the library are fiction","w":["All books in the library are fiction","No novel in the library is fiction","All fiction in the library is novels"],"lvl":2},
+  {"p":"Asha, Bimal and Chitra sit in a row.\nAsha is not at either end.\nBimal sits to the left of Asha.\nWho sits at the right end?","c":"Chitra","w":["Asha","Bimal","Cannot be determined"],"lvl":2},
+  {"p":"A box holds 5 sweets, and each is either a laddoo or a barfi.\nNone of the sweets is a laddoo.\nWhich conclusion must be true?","c":"All 5 sweets are barfi","w":["Some of the sweets are laddoos","The box holds 3 barfis","Cannot be determined"],"lvl":2},
+  {"p":"A bakery sells only bread, cakes and biscuits.\nSavita bought something that is neither bread nor cake.\nWhat did she buy?","c":"Biscuits","w":["Bread","Cake","Cannot be determined"],"lvl":2},
+  {"p":"Kiran is a cousin of Leela.\nLeela is the sister of Mohan.\nWhich conclusion must be true?","c":"Kiran is a cousin of Mohan","w":["Kiran is the brother of Mohan","Kiran is the sister of Leela","Mohan is a cousin of Leela"],"lvl":2},
+  {"p":"The 5th of a month falls on a Monday.\nOn which day does the 12th of that month fall?","c":"Monday","w":["Sunday","Tuesday","Saturday"],"lvl":2},
+  {"p":"Pooja is twice as old as her brother Arun.\nArun is 8.\nHow old will Pooja be in 4 years?","c":"20","w":["16","12","24"],"lvl":2},
+  {"p":"All members of the chess club are students of the school.\nSome students of the school are in the music club.\nWhich conclusion must be true?","c":"It is not certain that any chess club member is in the music club","w":["Some chess club members are in the music club","No chess club member is in the music club","All music club members are in the chess club"],"lvl":2},
+  {"p":"If a student scores above 90, she gets a medal.\nGeeta got a medal.\nWhich conclusion must be true?","c":"Nothing definite can be said about whether she scored above 90","w":["Geeta scored above 90","Geeta scored below 90","Geeta was the only winner"],"lvl":2},
+  {"p":"Only people with passes may enter the stadium.\nYash does not have a pass.\nWhich conclusion must be true?","c":"Yash may not enter the stadium","w":["Yash may enter the stadium","Yash lost his pass","Yash is a ticket seller"],"lvl":2},
+  {"p":"A clock gains 5 minutes every hour.\nIt is set correctly at 12:00 noon.\nWhat time will it show when the real time is 3:00 pm?","c":"3:15 pm","w":["3:05 pm","3:10 pm","3:20 pm"],"lvl":2},
+  {"p":"Five friends sit in a row.\nRina sits at the extreme left.\nSid sits next to Rina.\nTej sits between Sid and Uma.\nVani sits at the extreme right.\nWho sits in the middle?","c":"Tej","w":["Sid","Uma","Vani"],"lvl":3},
+  {"p":"On an island, knights always tell the truth and knaves always lie.\nA says: “B is a knave.”\nB says: “A and I are both knights.”\nWhat are A and B?","c":"A is a knight and B is a knave","w":["Both are knights","Both are knaves","A is a knave and B is a knight"],"lvl":3},
+  {"p":"Three boxes are labelled Apples, Oranges and Mixed, but every label is wrong.\nYou take one fruit from the box labelled Mixed and it is an apple.\nWhat does the box labelled Mixed contain?","c":"Only apples","w":["Only oranges","Mixed fruit","Cannot be determined"],"lvl":3},
+  {"p":"In a code, each letter is replaced by the letter two places ahead in the alphabet.\nCAT is written as ECV.\nHow is ZEBRA written?","c":"BGDTC","w":["CGDTC","BGDTB","XCZPY"],"lvl":3},
+  {"p":"A is the father of B.\nB is the sister of C.\nC is the mother of D.\nHow is A related to D?","c":"Grandfather","w":["Father","Uncle","Great-grandfather"],"lvl":3},
+  {"p":"Priya is the daughter of Ravi.\nRavi is the brother of Sunil.\nSunil’s wife is Kavita.\nHow is Priya related to Kavita?","c":"Niece","w":["Daughter","Sister","Cousin"],"lvl":3},
+  {"p":"If Meera studies, she passes.\nIf she passes, her parents are happy.\nHer parents are not happy.\nWhat can be concluded about whether Meera studied?","c":"She did not study","w":["She studied","She studied but failed","Nothing can be concluded"],"lvl":3},
+  {"p":"Four runners finish a race.\nAjay finishes before Bela but after Chandu.\nDinesh finishes after Bela.\nWho finishes second?","c":"Ajay","w":["Chandu","Bela","Dinesh"],"lvl":3},
+  {"p":"All programmers in the team are logical.\nSome logical people are musicians.\nNo musician is ever late.\nWhich conclusion must be true?","c":"Some logical people are never late","w":["All programmers are musicians","No programmer is ever late","Some programmers are musicians"],"lvl":3},
+  {"p":"Exactly one of these three statements is true.\n(i) The treasure is in the red box.\n(ii) The treasure is not in the red box.\n(iii) The treasure is in the blue box.\nWhat can be concluded?","c":"The treasure is not in the blue box","w":["The treasure is in the red box","The treasure is in the blue box","The treasure is not in the red box"],"lvl":3},
+  {"p":"A father is 30 years older than his son.\nIn 5 years he will be three times as old as his son.\nHow old is the son now?","c":"10","w":["5","15","20"],"lvl":3},
+  {"p":"In a group of 40 people, 25 speak Hindi and 20 speak English.\n5 people speak neither language.\nHow many speak both?","c":"10","w":["5","15","20"],"lvl":3},
+  {"p":"A, B and C each always tell the truth or always lie.\nA says: “B always lies.”\nB says: “C always lies.”\nC says: “A and B both always lie.”\nWho tells the truth?","c":"Only B","w":["Only A","Only C","A and B"],"lvl":3},
+  {"p":"Five consecutive odd numbers add up to 75.\nWhat is the largest of them?","c":"19","w":["17","21","23"],"lvl":3},
+  {"p":"Today is Thursday.\nWhat day of the week will it be 100 days from today?","c":"Saturday","w":["Friday","Sunday","Thursday"],"lvl":3},
+  {"p":"Pointing to a man, Neena says, “His mother is the only daughter of my mother.”\nHow is the man related to Neena?","c":"Her son","w":["Her brother","Her nephew","Her father"],"lvl":3},
+  {"p":"No honest person lies.\nSome politicians lie.\nWhich conclusion must be true?","c":"Some politicians are not honest","w":["No politician is honest","All politicians lie","Some honest people are politicians"],"lvl":3},
+  {"p":"Ankit, Bhavya and Chetan each drink one of tea, coffee and juice, all different.\nAnkit does not drink tea.\nBhavya drinks tea.\nChetan does not drink coffee.\nWhat does Ankit drink?","c":"Coffee","w":["Tea","Juice","Cannot be determined"],"lvl":3},
+];
+/* Emotional intelligence banks: [text, correct, w1, w2, w3, level] */
+const PERCEIVE = [
+  ["During the Diwali preparations, Rohan’s aunt snaps at him about a small mistake. He lowers his gaze, his shoulders stiffen and he says “sorry” very quietly.","Hurt","Amusement","Pride","Boredom",2],
+  ["Sneha opens the board-exam results page, goes completely silent, then lets out a long breath as her face relaxes into a smile.","Relief","Anger","Disgust","Envy",1],
+  ["Maya’s shoulders drop and her voice goes quiet when she hears the team was not chosen. She keeps her eyes on the floor.","Disappointment","Excitement","Amusement","Pride",1],
+  ["Leo jumps up, grins widely and talks quickly about the news from the exam office.","Elation","Disgust","Boredom","Guilt",1],
+  ["Ana frowns, clenches her jaw and speaks in short, clipped sentences after being interrupted for the third time.","Irritation","Relief","Curiosity","Embarrassment",1],
+  ["Tom checks the door twice, his breathing is quick, and he keeps glancing at the clock before his interview.","Anxiety","Contentment","Contempt","Pride",1],
+  ["Priya’s cheeks flush and she looks away after calling a colleague by the wrong name in front of everyone.","Embarrassment","Anger","Envy","Boredom",1],
+  ["Sam wrinkles his nose and pushes the plate away after smelling the dish.","Disgust","Surprise","Sadness","Pride",1],
+  ["Eva’s eyes widen and she steps back sharply when the door swings open behind her.","Startled surprise","Contentment","Contempt","Boredom",1],
+  ["Raj sits slumped, replies with one-word answers and shows no interest in the hobbies he once loved.","Low mood","Excitement","Irritation","Pride",2],
+  ["Chloe smiles tightly while a colleague receives the promotion she wanted, and congratulates them through gritted teeth.","Envy","Gratitude","Calm pride","Relief",3],
+  ["After helping a stranger carry shopping up the stairs, Kai stands a little taller and smiles quietly.","Quiet satisfaction","Resentment","Fear","Disgust",3],
+  ["Nina replays an argument at night, shaking her head and muttering, “I should have said something different.”","Regret","Pride","Amusement","Surprise",3],
+  ["At the railway station, Farhan sees his brother step off the train after two years abroad. Farhan runs forward with a huge smile and his arms wide open.","Joy","Anger","Boredom","Fear",1],
+  ["Kavya hears that her pet parrot has flown away and not returned. Her eyes fill with tears and she sits silently by the window.","Sadness","Joy","Pride","Disgust",1],
+  ["Arjun’s team lost by one run. He claps the winners politely, but his jaw is tight and he stares at the ground as he walks off.","Disappointment","Pride","Contempt","Amusement",2],
+  ["Mrs Iyer finds that her neighbours have dumped rubbish outside her gate again. Her voice rises and she points at the mess while speaking sharply.","Anger","Embarrassment","Relief","Sadness",2],
+  ["Bina has just been told that her shop must move out next month. She keeps asking, “But what will happen to us?” in a thin voice and twists her dupatta.","Worry","Pride","Amusement","Disgust",2],
+  ["After weeks of effort, Sanjana’s science model wins first prize. She stands straight on the stage, smiling, while her parents applaud loudly.","Pride","Shame","Fear","Envy",2],
+  ["A stranger pushes ahead of Imran in a long queue without a word. Imran’s face goes hard, he folds his arms and says in a cold voice, “Excuse me.”","Annoyance","Joy","Embarrassment","Sadness",2],
+  ["Pooja finds an old photo of her grandmother. She holds it close, smiles faintly, and her eyes become wet.","Nostalgia","Disgust","Anger","Envy",2],
+  ["Dev saw his friend cheating in the test and said nothing. Later he avoids his friend’s eyes and keeps sighing.","Guilt","Pride","Amusement","Contentment",2],
+  ["Neeraj spots the school bully near the gate. He slows down, looks for another way out and walks close to the wall.","Apprehension","Pride","Amusement","Relief",2],
+  ["After the fourth rejection letter, Kabir folds it neatly, sighs and says, “Well, that’s that,” with no sign of anger or surprise.","Resignation","Excitement","Rage","Pride",3],
+  ["When the new intern explains his idea, Mr Kapoor gives a small smirk, raises one eyebrow and glances at the others as if the idea were beneath him.","Contempt","Admiration","Anxiety","Sadness",3],
+  ["At dawn on his first visit to the Taj Mahal, Ishaan falls silent, his mouth slightly open, and stares up without moving.","Awe","Boredom","Disgust","Irritation",3],
+  ["Anjali scrolls through photos of friends at a party she was not invited to, then puts her phone face down and stares at the ceiling.","Loneliness","Pride","Amusement","Relief",3],
+  ["Mr Rao notices that his shopkeeper keeps glancing at the drawer and gives vague answers about the missing cash. Mr Rao narrows his eyes and starts watching the man’s hands.","Suspicion","Gratitude","Amusement","Pride",3],
+  ["Tara has sent her application to a music school and checks her email every few minutes, smiling a little each time she sees an empty inbox.","Hope","Disgust","Resentment","Boredom",3],
+  ["Sheetal reads the instructions three times, tilts her head and says, “But step 3 contradicts step 5.”","Confusion","Anger","Pride","Joy",3],
+];
+const UNDERSTAND = [
+  ["Which feeling is a blend of surprise and sadness?","Disappointment","Optimism","Contempt","Awe",2],
+  ["Which feeling is a blend of fear and surprise?","Awe","Remorse","Contempt","Optimism",3],
+  ["Which feeling is a blend of anger and disgust?","Contempt","Awe","Disappointment","Love",3],
+  ["Which feeling is a blend of sadness and disgust?","Remorse","Awe","Optimism","Love",3],
+  ["Joy combined with trust is most closely described as…","Love","Contempt","Remorse","Awe",2],
+  ["If irritation is left unaddressed for a long time, it is most likely to grow into…","Rage","Contentment","Boredom","Curiosity",1],
+  ["Which of these is the most intense form of fear?","Terror","Concern","Unease","Nervousness",1],
+  ["Which of these is the most intense form of sadness?","Grief","Pensiveness","Disappointment","Boredom",1],
+  ["Dani spent months preparing for an event, and then it was cancelled. Which pair of feelings is most likely?","Disappointment and frustration","Pride and relief","Amusement and calm","Envy and joy",2],
+  ["Meera hears that a close friend is moving abroad for a dream job. Which mix of feelings is most likely?","Happiness for them and sadness for herself","Disgust and pride","Anger and amusement","Boredom and awe",2],
+  ["Which of these is the mildest form of anger?","Annoyance","Rage","Fury","Hostility",1],
+  ["Which of these is the strongest form of joy?","Ecstasy","Serenity","Pleasure","Contentment",1],
+  ["Feeling sad because you miss someone who is far away is best described as…","Longing","Disgust","Pride","Amusement",1],
+  ["Which emotion usually pushes a person to move away from danger?","Fear","Pride","Joy","Boredom",1],
+  ["Which emotion is most closely linked to the feeling that you have done something wrong?","Guilt","Pride","Surprise","Amusement",1],
+  ["Rahul is happy about his promotion and sad about leaving his old team. This mix of feelings is best described as…","Bittersweet","Contempt","Disgust","Boredom",2],
+  ["Someone feels anxious before a family function because they expect to be judged. What thought most likely sits behind the feeling?","“I might be judged or embarrassed.”","“Everything will go perfectly.”","“I have already won.”","“I do not care what anyone thinks.”",2],
+  ["Which emotion most often follows a loss that you believe could have been avoided?","Frustration","Contentment","Serenity","Amusement",2],
+  ["Which pair of feelings is most likely in someone who has been wrongly blamed in public?","Anger and hurt","Pride and amusement","Calm and relief","Boredom and curiosity",2],
+  ["Which feeling is a blend of joy and surprise?","Delight","Contempt","Remorse","Envy",3],
+  ["Which feeling is a blend of anticipation and joy?","Optimism","Contempt","Remorse","Disappointment",3],
+  ["Which feeling is a blend of fear and sadness?","Despair","Awe","Love","Pride",3],
+  ["Naming your feelings precisely, such as “anxious” rather than just “bad”, is called emotional granularity. What is its main benefit?","It helps you choose a fitting way to cope","It makes feelings disappear","It stops other people noticing how you feel","It makes you feel stronger emotions",3],
+  ["Seeing a stressful event as “a challenge, not a threat” is an example of…","Cognitive reappraisal","Suppression","Avoidance","Rumination",3],
+  ["Which of these is the best example of emotional suppression?","Smiling and saying “I’m fine” while hiding that you are upset","Talking calmly about the problem","Seeing the problem from a new angle","Taking slow breaths before replying",3],
+];
+const MANAGE = [
+  {"lvl":2,"s":"Your parents want you to choose a course you are not interested in, and the discussion at home is getting heated. What is the most effective approach?","o":[["Pause the conversation, then calmly explain your reasons and listen to their concerns at a better time",1],["Agree for now to keep the peace and think about it later",0.5],["Argue until they give in",0],["Stop speaking to them until they change their mind",0]]},
+  {"lvl":1,"s":"Your friends are planning an expensive trip that you cannot afford. What is the best way to respond?","o":[["Be honest about your budget and suggest an option that works for everyone",1],["Quietly skip the trip without explaining",0.5],["Borrow money you cannot easily repay so you do not feel left out",0],["Tell everyone the plan is silly",0]]},
+  {"lvl":2,"s":"A colleague criticises your work in front of the whole team, and you feel your face getting hot. What is the most effective response?","o":[["Stay calm, acknowledge the point and offer to discuss the details afterwards",1],["Politely defend your work at once and move the meeting on",0.5],["Say nothing, then avoid them for the rest of the week",0],["Point out a mistake in their own work to even the score",0]]},
+  {"lvl":1,"s":"A friend is upset after failing an important exam and wants to talk. What is the best way to help?","o":[["Listen, acknowledge how disappointing it is, and ask what would help",1],["Offer revision tips and a retake plan straight away",0.5],["Tell them it is no big deal and they should cheer up",0],["Change the subject to something fun to distract them",0]]},
+  {"lvl":2,"s":"You feel overwhelmed because three deadlines fall in the same week. What is the most effective step?","o":[["List the tasks, rank them by urgency, and ask for help or an extension on what cannot be done",1],["Work late every night until everything is finished",0.5],["Do the easiest tasks first and hope the rest sort themselves out",0],["Ignore the stress and carry on as normal",0]]},
+  {"lvl":2,"s":"A team member keeps arriving late and it is affecting the group. What is the best approach?","o":[["Speak to them privately, describe the effect, and ask whether something is getting in the way",1],["Remind the whole team about punctuality in the group chat",0.5],["Complain about them to others in the team",0],["Cover for them quietly and say nothing",0]]},
+  {"lvl":1,"s":"Hours after an argument with a sibling, you are still angry. What is the most helpful thing to do?","o":[["Take time to cool down, then talk calmly about what upset you",1],["Distract yourself with something absorbing and hope it passes",0.5],["Send a sharp message so they know how you feel",0],["Give them the silent treatment until they apologise",0]]},
+  {"lvl":2,"s":"You have a job offer and feel excited and nervous at the same time. What is the wisest way to handle this?","o":[["Recognise both feelings, then weigh up the pros and cons before deciding",1],["Go with the excitement and ignore the nerves",0.5],["Decline the offer so the nerves go away",0],["Put off answering for as long as possible",0]]},
+  {"lvl":3,"s":"A colleague seems withdrawn and snapped at you for no clear reason. What is the best response?","o":[["Stay calm, avoid taking it personally, and check in gently later when they are ready",1],["Ignore it completely and carry on as normal",0.5],["Snap back so they know it is not acceptable",0],["Tell others that they are being difficult",0]]},
+  {"lvl":1,"s":"You receive an email that makes you furious. What is the best move?","o":[["Wait before replying, draft a calm response, and re-read it before sending",1],["Reply straight away but keep it short and factual",0.5],["Reply straight away with everything you think",0],["Forward it to others so you can vent",0]]},
+  {"lvl":1,"s":"You are about to present to a large group and your hands are trembling. What helps most?","o":[["Slow your breathing, remind yourself that you are prepared, and focus on your first sentence",1],["Skim your notes again and again until it is time",0.5],["Tell the organiser you are unwell and withdraw",0],["Convince yourself you will fail so you will not be disappointed",0]]},
+  {"lvl":3,"s":"Your manager gives you credit for something a teammate did. What is the best action?","o":[["Thank them and make sure your teammate’s contribution is acknowledged",1],["Say nothing now, but thank your teammate privately",0.5],["Accept the praise quietly",0],["Tell your teammate to speak up for themselves",0]]},
+  {"lvl":1,"s":"Your younger cousin spills tea on your new kurta at a family function and looks terrified. What is the best response?","o":[["Reassure them that accidents happen, and quietly clean up",1],["Say it is fine but sulk for the rest of the evening",0.5],["Scold them so they are more careful next time",0],["Demand that their parents pay for the kurta",0]]},
+  {"lvl":1,"s":"You are stuck in traffic and will reach a friend’s wedding late, and your temper is rising. What is the best thing to do?","o":[["Take a few slow breaths, message your friend that you will be late, and use the time to calm down",1],["Put on music to distract yourself and tell no one",0.5],["Honk repeatedly to get the cars moving",0],["Blame the driver ahead and shout at them",0]]},
+  {"lvl":1,"s":"A classmate laughs when you give a wrong answer in class and you feel embarrassed. What is the most effective response?","o":[["Take a breath, smile, say you will check the right answer, and carry on",1],["Stay quiet for the rest of the lesson",0.5],["Laugh it off but plan to get back at them later",0],["Tell them off loudly in front of everyone",0]]},
+  {"lvl":1,"s":"A friend cancels plans with you for the third time in a row, and you feel hurt. What is the best approach?","o":[["Tell them calmly that you feel let down and ask if something is going on",1],["Say it is fine but stop inviting them",0.5],["Send a sarcastic message to make your point",0],["Cancel on them next time to teach them a lesson",0]]},
+  {"lvl":1,"s":"Your phone dies just before an important call, and you are very frustrated. What is the most helpful response?","o":[["Calmly find a charger or borrow a phone, and explain the delay to the other person",1],["Give up on the call and hope they understand",0.5],["Complain loudly about how unlucky you are",0],["Blame a family member for not charging it",0]]},
+  {"lvl":1,"s":"You score lower than you expected in an important test. What is the most constructive response?","o":[["Allow yourself to feel disappointed, then review your mistakes and make a study plan",1],["Tell yourself it does not matter and move on without checking your mistakes",0.5],["Decide you are not good at the subject and stop trying",0],["Avoid talking about it with anyone",0]]},
+  {"lvl":1,"s":"Your neighbour plays loud music late at night while you are trying to sleep. What is the best way to handle it?","o":[["Politely ask them to turn it down, explaining that you need to rest",1],["Use earplugs and say nothing, and feel annoyed each night",0.5],["Bang on the wall repeatedly",0],["Play your own loud music in reply",0]]},
+  {"lvl":2,"s":"Your manager changes a deadline at the last minute and you feel you were not consulted. What is the best response?","o":[["Ask calmly for the reason, explain what the change affects, and propose a workable plan",1],["Agree without comment and work late, feeling resentful",0.5],["Refuse the new deadline outright",0],["Miss the deadline on purpose to make a point",0]]},
+  {"lvl":2,"s":"A friend confides a secret to you. Later you find it is being talked about, and your friend suspects you. What is the best response?","o":[["Calmly say you did not share it, show that you understand their worry, and offer to help find out how it spread",1],["Say nothing and let the suspicion pass",0.5],["Get angry and tell them they have no right to accuse you",0],["Blame another friend without any evidence",0]]},
+  {"lvl":2,"s":"Your team presentation went badly and a teammate blames you. You feel defensive. What is the best response?","o":[["Listen to the concern, own your part, and suggest what the team can change next time",1],["Agree that it was entirely your fault",0.5],["Point out all of their mistakes in return",0],["Stay silent and avoid them afterwards",0]]},
+  {"lvl":2,"s":"A relative at a family gathering keeps commenting on your career choices and you feel irritated. What is the best way to respond?","o":[["Stay calm, thank them for their concern, and say you have thought it through",1],["Change the subject and avoid them for the rest of the evening",0.5],["Tell them sharply to mind their own business",0],["Argue back until they stop",0]]},
+  {"lvl":2,"s":"You are exhausted after a long week, but a friend asks for help with something important. What is the wisest response?","o":[["Tell them honestly that you are tired, and offer a time when you can help properly or a smaller way to help now",1],["Say yes, then do a poor job while resenting it",0.5],["Say no without explanation and switch off your phone",0],["Pretend you did not see the message",0]]},
+  {"lvl":2,"s":"After a heated argument with a close friend, you realise you said something unkind. What is the best next step?","o":[["Apologise sincerely for what you said, without adding excuses",1],["Wait for them to apologise first",0.5],["Say “sorry you were upset” without owning your words",0],["Pretend the argument never happened",0]]},
+  {"lvl":2,"s":"In a meeting you hear a colleague take credit for a small part of your work. What is the most effective response?","o":[["Politely clarify your contribution in the meeting, then talk to the colleague privately",1],["Say nothing, then raise it with your manager later",0.5],["Interrupt loudly and accuse them of stealing",0],["Stop sharing your work with the team",0]]},
+  {"lvl":3,"s":"Your close friend has just lost a parent and wants to be left alone, but you are worried about them. What is the most emotionally intelligent response?","o":[["Respect their wish for space, send a short caring message, and make it clear you are there whenever they want",1],["Stay completely away and say nothing",0.5],["Visit uninvited every day to cheer them up",0.5],["Tell them it is time to move on",0]]},
+  {"lvl":3,"s":"You lead a group project, and two teammates keep clashing, which slows everyone down. What is the best approach?","o":[["Meet each of them separately to understand their concerns, then bring them together to agree working rules",1],["Split the project so that they never need to talk",0.5],["Ask them to sort it out themselves and not involve you",0.5],["Take the side of the one whose ideas you prefer",0]]},
+  {"lvl":3,"s":"A mentor you respect gives you harsh but partly fair feedback, and your confidence drops. What is the most effective response?","o":[["Thank them, note the points that are fair, and ask for examples so you can improve",1],["Agree politely but ignore the feedback",0.5],["Dismiss it as their bad mood",0],["Accept all of it as proof that you are not good enough",0]]},
+  {"lvl":3,"s":"At a family gathering, two relatives start a loud argument about money and everyone looks uncomfortable. You are not involved. What is the best action?","o":[["Calmly suggest a break and a private talk later, and gently shift the mood",1],["Quietly leave the room until it ends",0.5],["Join in to support the relative you agree with",0],["Tell them both off for ruining the event",0]]},
+  {"lvl":3,"s":"You made a mistake that cost your team an important client, and your manager asks what happened. What is the best response?","o":[["Explain honestly what happened, accept responsibility, and share how you will prevent it again",1],["Explain what happened but stress that others also contributed",0.5],["Say you are not sure how it happened",0],["Offer to resign immediately",0]]},
+  {"lvl":3,"s":"A friend keeps joking about your accent in front of others. It hurts, but they do not seem to realise. What is the most effective response?","o":[["Tell them privately and calmly that the jokes hurt you, and ask them to stop",1],["Laugh along so they do not notice, and say nothing",0.5],["Make jokes about them in return",0],["Stop speaking to them without explanation",0]]},
+  {"lvl":3,"s":"You feel jealous when a close friend wins a scholarship you also applied for. What is the most mature response?","o":[["Acknowledge the jealousy privately, congratulate your friend sincerely, and use it to review your own plans",1],["Tell yourself the scholarship was not worth it",0.5],["Avoid your friend until the feeling passes",0.5],["Congratulate them but privately hope something goes wrong",0]]},
+  {"lvl":3,"s":"Your elderly father refuses to see a doctor despite worrying symptoms, and you feel scared and frustrated. What is the best approach?","o":[["Express your worry calmly, ask what concerns him about going, and offer to go along with him",1],["Warn him sternly about what could happen",0.5],["Drop the subject to avoid a fight",0],["Book the appointment without telling him",0]]},
+  {"lvl":3,"s":"You are offered a promotion that means moving to another city, away from family. You feel pulled in two directions. What is the wisest way to decide?","o":[["Name each feeling, discuss the options with the people affected, and weigh your long-term goals",1],["Go with whichever feeling is strongest today",0.5],["Let your family decide for you",0],["Refuse so that you do not have to decide",0]]},
+];
+/* Personality (IPIP, public domain) + temporal banks */
+const TRAIT_NAMES = { O: 'Openness', C: 'Conscientiousness', E: 'Extraversion', A: 'Agreeableness', N: 'Neuroticism' };
+const BIG = {"N":{
+    "pos":["I worry about things.","I fear for the worst.","I am afraid of many things.","I get stressed out easily.","I get irritated easily.","I get upset easily.","I am often in a bad mood.","I feel that I’m unable to deal with things.","I have frequent mood swings.","I panic easily.","I become overwhelmed by events.","I get overwhelmed by emotions."],
+    "rev":["I am relaxed most of the time.","I am not easily bothered by things.","I don’t worry about things that have already happened.","I am not embarrassed easily.","I seldom get mad.","I keep my cool.","I seldom feel blue.","I feel comfortable with myself.","I remain calm under pressure.","I know how to cope.","I readily overcome setbacks.","I am calm even in tense situations."]},"E":{
+    "pos":["I make friends easily.","I warm up quickly to others.","I feel comfortable around people.","I cheer people up.","I love large parties.","I talk to a lot of different people at parties.","I enjoy being part of a group.","I take charge.","I try to lead others.","I can talk others into doing things.","I am always on the go.","I have a lot of fun."],
+    "rev":["I am hard to get to know.","I often feel uncomfortable around others.","I avoid contacts with others.","I keep others at a distance.","I prefer to be alone.","I don’t like to draw attention to myself.","I don’t like crowded events.","I avoid crowds.","I wait for others to lead the way.","I keep in the background.","I have little to say.","I hold back my opinions."]},"O":{
+    "pos":["I have a vivid imagination.","I enjoy wild flights of fantasy.","I love to daydream.","I spend time reflecting on things.","I believe in the importance of art.","I see beauty in things that others might not notice.","I prefer variety to routine.","I like to visit new places.","I am interested in many things.","I like to solve complex problems.","I love to read challenging material.","I enjoy thinking about things."],
+    "rev":["I do not have a good imagination.","I have difficulty imagining things.","I seldom daydream.","I do not like poetry.","I do not enjoy going to art museums.","I prefer to stick with things that I know.","I dislike changes.","I am a creature of habit.","I am attached to conventional ways.","I am not interested in abstract ideas.","I have difficulty understanding abstract ideas.","I avoid difficult reading material."]},"A":{
+    "pos":["I trust others.","I believe that others have good intentions.","I believe that people are basically moral.","I believe in human goodness.","I make people feel welcome.","I anticipate the needs of others.","I love to help others.","I am concerned about others.","I have a good word for everyone.","I feel sympathy for those who are worse off than myself.","I suffer from others’ sorrows.","I value cooperation over competition."],
+    "rev":["I distrust people.","I suspect hidden motives in others.","I look down on others.","I am indifferent to the feelings of others.","I turn my back on others.","I take no time for others.","I have a sharp tongue.","I insult people.","I hold a grudge.","I get back at others.","I take advantage of others.","I am not interested in other people’s problems."]},"C":{
+    "pos":["I am always prepared.","I pay attention to details.","I get chores done right away.","I carry out my plans.","I complete tasks successfully.","I finish what I start.","I like order.","I keep my promises.","I work hard.","I pay my bills on time.","I do more than what is expected of me.","I know how to get things done."],
+    "rev":["I waste my time.","I find it difficult to get down to work.","I do just enough work to get by.","I don’t see things through.","I mess things up.","I leave things unfinished.","I need a push to get started.","I often forget to put things back in their proper place.","I leave my belongings around.","I put little time and effort into my work.","I break my promises.","I don’t put my mind on the task at hand."]}};
+const TEMP = {
+  "FS":{"pos":["The person I will be in ten years will be much like the person I am now.","I can see my core values staying the same as I grow older.","I expect my future self to share my current outlook on life.","My future self will want the same things from life that I want today.","My future self will hold the same basic beliefs that I hold today.","Whatever else changes, I expect to remain the same person at my core.","I expect my future self to react to life much as I do now.","In twenty years, I think I will still be recognisably me.","The people I care about today will probably still matter to my future self.","My future self will have the same sense of humour that I have now.","I think my future self will make decisions in the same way I do today.","I feel that my future self and I are essentially the same person."],"rev":["I think my future self will be almost a stranger to me.","In ten years I will probably be a very different person at heart.","I cannot see my future self sharing my values.","My future self will probably want completely different things from the things I want now.","I expect my future self to hold beliefs that I would disagree with today.","I will probably become a person I would not recognise.","My future self will have little in common with me.","In ten years I expect my values to have changed completely.","I feel that my future self and I are two different people.","I expect my personality to change so much that my present self will seem like a stranger.","My future self will look back on my present priorities as foreign to them."]},
+  "FV":{"pos":["I can picture my life a few years from now in clear detail.","When I think about my future self, I get a clear mental image.","I find it easy to imagine an ordinary day in my life five years from now.","I can picture what I will look like and how I will act in the future.","I can see in my mind exactly where I might be living in five years.","When I imagine my future life, the scenes feel real and detailed.","I can picture myself in my future job as if it were a film in my head.","I can easily imagine the sights and sounds of a day in my future life.","My picture of who I will be in ten years is sharp and specific.","I can imagine how my future self will look, move and speak.","I have a clear image of my home and surroundings in the future."],"rev":["It is hard for me to imagine what my future self is like.","My future self feels vague and blurry in my mind.","I cannot easily visualise what I will be doing in five years.","When I try to picture my life in ten years, the image is fuzzy.","I cannot form a clear picture of my future self.","My mental image of my future life is faint and lacking in detail.","I find it hard to imagine where I will be living in five years.","My future self is a vague outline to me, not a real person.","When I imagine myself ten years from now, I see very little.","The details of my future life are a blank to me.","I struggle to see my future self in any detail."]},
+  "FP":{"pos":["I look forward to meeting the person I will become.","I feel optimistic about the person I will be in the future.","I believe my future self will be proud of the choices I make today.","I expect my future self to have a good life.","I feel hopeful when I think about the person I am becoming.","I think my future self will be happier than I am today.","I feel good about the direction my life is heading.","I am excited about the opportunities my future self will have.","I believe my future self will be content with the life I have built.","Thinking about my future self makes me feel warm and positive.","I feel confident that my future self will be well and thriving.","I like the person I am likely to become."],"rev":["I feel uneasy when I think about my future self.","Thinking about my future self makes me feel gloomy.","I dread the person I may become.","I worry that my future self will be unhappy.","I feel anxious when I imagine my life ten years from now.","I expect my future self to be disappointed in the choices I am making now.","I feel pessimistic about the person I will be.","My future self seems likely to struggle.","I do not expect my future self to be happy.","Imagining my future self fills me with dread.","I fear that my future self will have a hard life."]},
+  "PC":{"pos":["I feel connected to the person I was five years ago.","I can easily recall how I felt in important moments of my past.","I still recognise myself in my younger self.","I am at peace with the person I used to be.","I am grateful to my earlier self for decisions that have helped me.","I feel I am still the same person I was as a child.","My school days feel like part of the same life story as my life today.","My past experiences have shaped who I am, and I can see the connection.","I understand why I made the choices I made in the past.","I feel close to the person I used to be.","I can look back at my younger self with understanding."],"rev":["My past self feels like a different person to me.","I feel disconnected from who I used to be.","It is hard to relate to how I thought and felt in the past.","I feel like a different person from the one I was ten years ago.","It is hard to see how my past connects to who I am today.","I find it difficult to understand why I acted as I did in the past.","My younger self feels like someone I never really knew.","My past feels as if it happened to someone else.","I feel little connection with my school-days self.","I look at old photographs of myself and feel no link to the person in them.","I cannot relate to the goals I had five years ago."]}};
+
+const NONSENSE = ['zorbs', 'plinks', 'quads', 'mivs', 'teks', 'borns', 'fendles', 'gribs', 'slarps', 'dorbs', 'wuffs', 'nerks'];
+function syllogismItem(level) {
+  const t = sample(NONSENSE, 3);
+  const X = t[0], Y = t[1], Z = t[2];
+  const kinds = level <= 1 ? [1, 2, 3] : level === 2 ? [1, 2, 3, 4, 5] : [2, 3, 4, 5];
+  const k = pick(kinds);
+  const q = '\nWhich conclusion must follow?';
+  if (k === 1) return mcItem('logic', 'All ' + X + ' are ' + Y + '.\nAll ' + Y + ' are ' + Z + '.' + q, 'All ' + X + ' are ' + Z, ['All ' + Z + ' are ' + X, 'No ' + X + ' are ' + Z, 'Some ' + Y + ' are not ' + Z]);
+  if (k === 2) return mcItem('logic', 'No ' + Y + ' are ' + Z + '.\nAll ' + X + ' are ' + Y + '.' + q, 'No ' + X + ' are ' + Z, ['All ' + X + ' are ' + Z, 'Some ' + X + ' are ' + Z, 'All ' + Z + ' are ' + X]);
+  if (k === 3) return mcItem('logic', 'All ' + Y + ' are ' + Z + '.\nSome ' + X + ' are ' + Y + '.' + q, 'Some ' + X + ' are ' + Z, ['All ' + X + ' are ' + Z, 'No ' + X + ' are ' + Z, 'All ' + Z + ' are ' + X]);
+  if (k === 4) return mcItem('logic', 'No ' + Y + ' are ' + Z + '.\nSome ' + X + ' are ' + Y + '.' + q, 'Some ' + X + ' are not ' + Z, ['All ' + X + ' are ' + Z, 'No ' + X + ' are ' + Y, 'Some ' + X + ' are ' + Z]);
+  return mcItem('logic', 'All ' + X + ' are ' + Y + '.\nAll ' + Z + ' are ' + Y + '.' + q, 'No definite link between ' + X + ' and ' + Z + ' can be concluded', ['All ' + X + ' are ' + Z, 'Some ' + X + ' are ' + Z, 'No ' + X + ' are ' + Z]);
+}
+const NAMES = ['Aarav', 'Bhavna', 'Chetan', 'Divya', 'Esha', 'Farhan', 'Gautam', 'Harini', 'Imran', 'Jaya', 'Kabir', 'Lakshmi', 'Manoj', 'Nisha', 'Omkar'];
+const ADJ = [
+  ['taller', 'shorter', 'tallest', 'shortest'],
+  ['older', 'younger', 'oldest', 'youngest'],
+  ['faster', 'slower', 'fastest', 'slowest'],
+  ['heavier', 'lighter', 'heaviest', 'lightest']
+];
+function orderingItem(area, n) {
+  const names = sample(NAMES, n);
+  const adj = pick(ADJ);
+  const stm = [];
+  for (let i = 0; i < n - 1; i++) {
+    const flip = Math.random() < 0.5;
+    stm.push(flip ? names[i + 1] + ' is ' + adj[1] + ' than ' + names[i] + '.' : names[i] + ' is ' + adj[0] + ' than ' + names[i + 1] + '.');
+  }
+  let q = '', ans = '';
+  const r = Math.random();
+  if (n === 3 || r < 0.35) { q = 'Who is the ' + adj[2] + '?'; ans = names[0]; }
+  else if (r < 0.7) { q = 'Who is the ' + adj[3] + '?'; ans = names[n - 1]; }
+  else if (Math.random() < 0.5) { q = 'Who is the second ' + adj[2] + '?'; ans = names[1]; }
+  else { q = 'Who is the second ' + adj[3] + '?'; ans = names[n - 2]; }
+  const wrongs = shuffle(names.filter(function (x) { return x !== ans; })).concat(['Cannot be determined']);
+  return mcItem(area, shuffle(stm).join('\n') + '\n' + q, ans, wrongs);
+}
+function logicBankItem(level, strict) {
+  let pool = LOGICS.filter(function (l) { return strict ? l.lvl === level : Math.abs(l.lvl - level) <= 1; });
+  if (pool.length < 2) pool = LOGICS;
+  const l = pick(pool);
+  return mcItem('logic', l.p, l.c, l.w);
+}
+function wordProblem() {
+  const t = ri(0, 4);
+  if (t === 0) {
+    const m = pick([3, 4, 5, 6, 8]), mins = pick([4, 5, 6, 8, 10, 12]), N = pick([40, 60, 100, 120, 200]);
+    return numItem('power', m + ' machines take ' + mins + ' minutes to make ' + m + ' widgets.\nHow many minutes would ' + N + ' machines take to make ' + N + ' widgets?', mins, [Math.round((N / m) * mins), N]);
+  }
+  if (t === 1) {
+    const p = pick([10, 20, 30, 40, 50]);
+    const x = (p * p) / 100;
+    return mcItem('power', 'A shopkeeper raises the price of an item by ' + p + '% and then reduces the new price by ' + p + '%.\nCompared with the original price (say ₹1,000), the final price is…', x + '% lower', ['The same as the original', x + '% higher', p + '% lower']);
+  }
+  if (t === 2) {
+    let n = 0, k = 0, m = 0;
+    for (let i = 0; i < 200; i++) {
+      n = ri(5, 40); k = ri(2, 10);
+      const v = 2 * n - k;
+      if (v > 0 && v % 3 === 0) { m = v / 3; break; }
+    }
+    if (m === 0) { n = 8; k = 4; m = 4; }
+    return numItem('power', 'I think of a number, double it, subtract ' + k + ', then divide by 3. The answer is ' + m + '.\nWhat number did I think of?', n, [m * 3, 2 * m + k]);
+  }
+  if (t === 3) {
+    const M = ri(10, 40), d = ri(1, 5);
+    return numItem('power', 'The mean of five numbers is ' + M + '. When a sixth number is added, the mean rises to ' + (M + d) + '.\nWhat is the sixth number?', M + 6 * d, [M + d, M + 5 * d]);
+  }
+  const pr = pick([[12, 6, 8], [30, 20, 24], [60, 40, 48], [40, 24, 30], [15, 10, 12], [6, 3, 4]]);
+  return numItem('power', 'A car travels the first half of a journey at ' + pr[0] + ' km/h and the second half at ' + pr[1] + ' km/h.\nWhat is its average speed for the whole journey, in km/h?', pr[2], [(pr[0] + pr[1]) / 2]);
+}
+function speedItem(L) {
+  const t = ri(0, 5);
+  if (t === 0) {
+    const a = ri(L === 1 ? 6 : 11, L === 1 ? 39 : 79), b = ri(L === 1 ? 3 : 11, L === 1 ? 29 : 49);
+    return numItem('speed', a + ' + ' + b + ' = ?', a + b, [a + b + 10, a + b - 10]);
+  }
+  if (t === 1) {
+    const a = ri(L === 1 ? 20 : 30, L === 1 ? 60 : 99), b = ri(6, a - 5);
+    return numItem('speed', a + ' − ' + b + ' = ?', a - b, [a - b + 10, a - b - 10]);
+  }
+  if (t === 2) {
+    const x = ri(2, L === 1 ? 9 : 12), y = ri(3, L === 1 ? 9 : 12);
+    return numItem('speed', x + ' × ' + y + ' = ?', x * y, [x * y + x, x * y - y]);
+  }
+  if (t === 3) {
+    if (Math.random() < 0.5) { const h = ri(10, 90); return numItem('speed', 'Half of ' + (h * 2) + ' is…', h, [h * 2, h + 10]); }
+    const d = ri(13, 99);
+    return numItem('speed', 'Double ' + d + ' is…', d * 2, [d * 2 + 10, d * 2 - 10]);
+  }
+  if (t === 4) {
+    const s = ri(1, 30), d = ri(2, 9);
+    return numItem('speed', s + ',  ' + (s + d) + ',  ' + (s + 2 * d) + ',  ?', s + 3 * d, [s + 3 * d + 1, s + 4 * d]);
+  }
+  const nums = [];
+  while (nums.length < 4) { const v = ri(10, 99); if (nums.indexOf(v) < 0) nums.push(v); }
+  const big = Math.random() < 0.5;
+  const correct = big ? Math.max.apply(null, nums) : Math.min.apply(null, nums);
+  return mcItem('speed', 'Which of these is the ' + (big ? 'largest' : 'smallest') + ' number?', String(correct), nums.filter(function (n) { return n !== correct; }).map(String));
+}
+const ODD_PAIRS = [['O', 'Q'], ['E', 'F'], ['M', 'N'], ['b', 'd'], ['p', 'q'], ['6', '9'], ['W', 'V'], ['R', 'P']];
+function oddSymbolItem(trial) {
+  const pr = pick(ODD_PAIRS);
+  const flip = Math.random() < 0.5;
+  const base = flip ? pr[0] : pr[1], odd = flip ? pr[1] : pr[0];
+  const cols = 8, rows = 4 + trial;
+  const cells = [];
+  for (let i = 0; i < cols * rows; i++) cells.push(base);
+  const k = ri(0, cols * rows - 1);
+  cells[k] = odd;
+  return { id: uid(), area: 'attn', prompt: 'One symbol in this grid is different from all the others. Tap it.', options: [], answer: k, pick: true, grid: { cols: cols, cells: cells, minH: 38, font: 18, maxW: 340 } };
+}
+function countTargetItem(trial) {
+  const pr = pick([['▲', '△'], ['●', '○'], ['■', '□']]);
+  const cols = 8, rows = 5 + trial, total = cols * rows;
+  const k = ri(6, 12);
+  const dis = [pr[1], '◆', '✚'];
+  const cells = [];
+  for (let i = 0; i < total; i++) cells.push(pick(dis));
+  const spots = sample(Array.from({ length: total }, function (_, i) { return i; }), k);
+  for (const s of spots) cells[s] = pr[0];
+  return numItem('attn', 'How many solid ' + pr[0] + ' symbols are in this grid? (Hollow shapes do not count.)', k, [k + 1, k - 1], { cols: cols, cells: cells, minH: 34, font: 18, maxW: 340 });
+}
+
+const LIKERT = ['Strongly disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly agree'];
+
+/* ===== Test construction ===== */
+/* Questions that count toward the 60: 5 starter + 55 main-run questions.
+   The digit span and the timed speed block are two extra timed tasks and are NOT part of the 60. */
+const TEST_Q = 60;
+const SPLIT = { cog: 22, attn: 3, power: 4, pers: 20, ei: 7, temp: 4 };
+let usedKeys = {};
+function kA(a) { return 'A|' + a[0]; }
+function kO(o) { return 'O|' + o.same.join(',') + '|' + o.odd; }
+function kL(l) { return 'L|' + l.p; }
+function kE(q) { return 'E|' + (q.s || q[0]); }
+function take(arr, n, keyFn) {
+  const fresh = arr.filter(function (x) { return !usedKeys[keyFn(x)]; });
+  const got = sample(fresh.length >= n ? fresh : arr, n);
+  got.forEach(function (x) { usedKeys[keyFn(x)] = 1; });
+  return got;
+}
+function lvlPool(arr, L, get) {
+  const p = arr.filter(function (x) { return Math.abs(get(x) - L) <= 1; });
+  return p.length >= 8 ? p : arr;
+}
+function gen(fn) {
+  for (let i = 0; i < 40; i++) {
+    const it = fn();
+    const k = 'G|' + it.prompt + '|' + (it.grid ? it.grid.cells.join('') : '');
+    if (!usedKeys[k]) { usedKeys[k] = 1; return it; }
+  }
+  return fn();
+}
+function analogyItem(a) { return mcItem('verb', a[0] + '\nChoose the word that completes the analogy.', a[1], [a[2], a[3], a[4]]); }
+function oddItem(o) {
+  const opts = shuffle(o.same.concat([o.odd]));
+  return { id: uid(), area: 'verb', prompt: 'Which one does not belong with the others?', options: opts, answer: opts.indexOf(o.odd) };
+}
+function logicFrom(l, area) {
+  const it = mcItem(area, l.p, l.c, l.w);
+  it.key = kL(l);
+  return it;
+}
+function buildCognitive(L) {
+  const items = [];
+  for (let i = 0; i < 4; i++) items.push(gen(function () { return seriesItem('num', L); }));
+  for (const a of take(lvlPool(ANALOGIES, L, function (x) { return x[5]; }), 2, kA)) items.push(analogyItem(a));
+  for (const o of take(lvlPool(ODDS, L, function (x) { return x.lvl; }), 2, kO)) items.push(oddItem(o));
+  items.push(gen(function () { return syllogismItem(L); }));
+  items.push(gen(function () { return orderingItem('logic', L <= 1 ? 3 : 4); }));
+  for (const l of take(lvlPool(LOGICS, L, function (x) { return x.lvl; }), 3, kL)) items.push(logicFrom(l, 'logic'));
+  for (let i = 0; i < 2; i++) items.push(gen(function () { return letterItem(L); }));
+  for (let i = 0; i < 2; i++) items.push(gen(function () { return matrixItem('pat', L); }));
+  return shuffle(items);
+}
+function buildPower(L) {
+  const pl = Math.min(3, L + 1);
+  const items = [];
+  items.push(gen(function () { return seriesItem('power', 3); }));
+  items.push(gen(function () { return matrixItem('power', pl); }));
+  items.push(gen(function () { return orderingItem('power', 5); }));
+  items.push(gen(wordProblem));
+  items.push(gen(wordProblem));
+  const hard = sample(LOGICS.filter(function (l) { return l.lvl === 3 && !usedKeys[kL(l)]; }), 2);
+  hard.forEach(function (l) { items.push(logicFrom(l, 'power')); });
+  const sel = sample(items, SPLIT.power);
+  sel.forEach(function (it) { if (it.key) usedKeys[it.key] = 1; });
+  return sel;
+}
+function buildPersonality() {
+  const items = [];
+  for (const t of Object.keys(BIG)) {
+    for (const x of sample(BIG[t].pos, 2)) items.push({ id: uid(), trait: t, text: x, rev: false });
+    for (const x of sample(BIG[t].rev, 2)) items.push({ id: uid(), trait: t, text: x, rev: true });
+  }
+  return shuffle(items);
+}
+function buildTemporal() {
+  const items = [];
+  const flags = shuffle([false, false, true, true]);
+  Object.keys(TEMP).forEach(function (t, i) {
+    const rv = flags[i % 4];
+    items.push({ id: uid(), trait: t, text: pick(rv ? TEMP[t].rev : TEMP[t].pos), rev: rv });
+  });
+  return shuffle(items);
+}
+function buildEI(L) {
+  const items = [];
+  for (const q of take(lvlPool(PERCEIVE, L, function (x) { return x[5]; }), 3, kE)) {
+    items.push(mcItem('per', q[0] + '\nWhich emotion is this person most likely feeling?', q[1], [q[2], q[3], q[4]]));
+  }
+  for (const q of take(lvlPool(UNDERSTAND, L, function (x) { return x[5]; }), 2, kE)) {
+    items.push(mcItem('und', q[0], q[1], [q[2], q[3], q[4]]));
+  }
+  for (const s of take(lvlPool(MANAGE, L, function (x) { return x.lvl; }), 2, kE)) {
+    const idx = shuffle([0, 1, 2, 3]);
+    items.push({
+      id: uid(), area: 'man', prompt: s.s + '\nChoose the most effective response.',
+      options: idx.map(function (i) { return s.o[i][0]; }),
+      pts: idx.map(function (i) { return s.o[i][1]; }),
+      answer: idx.indexOf(0)
+    });
+  }
+  return shuffle(items);
+}
+function scoreItem(it, sel) {
+  if (sel === undefined || sel === null || sel < 0) return 0;
+  if (it.pts) return it.pts[sel] === undefined ? 0 : it.pts[sel];
+  return sel === it.answer ? 1 : 0;
+}
+function buildStarter() {
+  usedKeys = {};
+  const items = [];
+  items.push(gen(function () { return seriesItem('num', 2); }));
+  items.push(gen(function () { return letterItem(2); }));
+  const a = take(ANALOGIES.filter(function (x) { return x[5] === 2; }), 1, kA)[0];
+  items.push(analogyItem(a));
+  const o = take(ODDS.filter(function (x) { return x.lvl === 2; }), 1, kO)[0];
+  items.push(oddItem(o));
+  items.push(gen(function () { return matrixItem('pat', 2); }));
+  return shuffle(items).map(function (item) { return { kind: 'mc', item: item }; });
+}
+function routeLevel(steps, answers) {
+  let c = 0;
+  for (const s of steps.slice(0, STARTER_N)) { if (s.kind === 'mc') c += scoreItem(s.item, answers[s.item.id]); }
+  return c <= 1 ? 1 : c <= 3 ? 2 : 3;
+}
+function buildRest(L) {
+  let items = [];
+  const addMC = function (it) { items.push({ kind: 'mc', item: it }); };
+  const addL = function (it) { items.push({ kind: 'likert', item: it }); };
+  const pw = buildPower(L);
+  buildCognitive(L).forEach(addMC);
+  for (let i = 0; i < 2; i++) addMC(oddSymbolItem(i + 1));
+  addMC(countTargetItem(1));
+  pw.forEach(addMC);
+  buildPersonality().forEach(addL);
+  buildEI(L).forEach(addMC);
+  buildTemporal().forEach(addL);
+  items = shuffle(items);
+  const sp = [];
+  for (let i = 0; i < SPEED_N; i++) sp.push(speedItem(L));
+  const blocks = shuffle([{ kind: 'span', dir: 'fwd' }, { kind: 'speed', items: sp, secs: SPEED_SECS }]);
+  const total = items.length + blocks.length;
+  const slots = [];
+  for (let k = 0; k < blocks.length; k++) slots.push(Math.max(1, Math.floor((k + Math.random()) * (total / blocks.length))));
+  const out = [];
+  let ii = 0, bi = 0;
+  for (let i = 0; i < total; i++) {
+    if (slots.indexOf(i) >= 0 && bi < blocks.length) { out.push(blocks[bi]); bi += 1; }
+    else if (ii < items.length) { out.push(items[ii]); ii += 1; }
+    else if (bi < blocks.length) { out.push(blocks[bi]); bi += 1; }
+  }
+  return out;
+}
+
+/* ===== Biodata ===== */
+const GENDERS = ['Female', 'Male', 'Non-binary', 'Prefer not to say'];
+const EDUS = ['Class 10 or below', 'Class 11–12 / pre-university', 'Diploma / ITI', 'Undergraduate', 'Postgraduate', 'Doctorate / professional degree'];
+const EDU_ADJ = { 'Class 10 or below': -0.02, 'Class 11–12 / pre-university': -0.01, 'Diploma / ITI': -0.01, 'Undergraduate': 0, 'Postgraduate': 0.02, 'Doctorate / professional degree': 0.03 };
+const OCCS = ['School student', 'College student', 'Employed (private sector)', 'Employed (government / public sector)', 'Self-employed / business', 'Homemaker', 'Between jobs', 'Other'];
+const LANGS = ['Hindi', 'English', 'Bengali', 'Marathi', 'Telugu', 'Tamil', 'Gujarati', 'Urdu', 'Kannada', 'Odia', 'Malayalam', 'Punjabi', 'Assamese', 'Other'];
+const STATES = ['Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry', 'Outside India'];
+const SLEEPS = ['Under 5 hours', '5 to 6 hours', '7 to 8 hours', 'More than 8 hours'];
+const PRIORS = ['No, this is my first time', 'Yes, a while ago', 'Yes, recently'];
+const ENG_LABELS = ['Basic', 'Fair', 'Good', 'Very good', 'Fluent'];
+
+function bioAdjust(bio, ageN) {
+  let adj = 0;
+  const notes = [];
+  const e = EDU_ADJ[bio.edu];
+  if (e !== undefined && e !== 0 && ageN >= 18) { adj += e; notes.push('education level'); }
+  const eng = parseInt(bio.eng, 10);
+  if (eng > 0 && eng <= 2) { adj -= 0.02; notes.push('comfort with English (verbal items are in English)'); }
+  if (bio.sleep === 'Under 5 hours') { adj -= 0.01; notes.push('short sleep last night'); }
+  if (bio.prior === 'Yes, recently') { adj += 0.01; notes.push('recent practice with similar tests'); }
+  return { adj: adj, notes: notes };
+}
+
+/* ===== Scoring ===== */
+function iqCategory(iq) {
+  if (iq >= 130) return 'Very high';
+  if (iq >= 120) return 'High';
+  if (iq >= 110) return 'Above average';
+  if (iq >= 90) return 'Average';
+  if (iq >= 80) return 'Below average';
+  return 'Well below average';
+}
+function computeResult(steps, answers, sc, band, adj, level) {
+  const sum = {}, cnt = {}, tv = {};
+  let skipped = 0, answered = 0;
+  for (const s of steps) {
+    if (s.kind === 'mc') {
+      const a = s.item.area;
+      const sel = answers[s.item.id];
+      sum[a] = (sum[a] || 0) + scoreItem(s.item, sel);
+      cnt[a] = (cnt[a] || 0) + 1;
+      if (sel === undefined || sel < 0) skipped += 1; else answered += 1;
+    } else if (s.kind === 'likert') {
+      const sel = answers[s.item.id];
+      if (sel === undefined || sel < 0) { skipped += 1; }
+      else {
+        answered += 1;
+        const v = sel + 1;
+        if (!tv[s.item.trait]) tv[s.item.trait] = [];
+        tv[s.item.trait].push(s.item.rev ? 6 - v : v);
+      }
+    }
+  }
+  const frac = function (a) { return cnt[a] ? (sum[a] || 0) / cnt[a] : 0; };
+  const cogCorrect = (sum.num || 0) + (sum.verb || 0) + (sum.logic || 0) + (sum.pat || 0);
+  const cogN = (cnt.num || 0) + (cnt.verb || 0) + (cnt.logic || 0) + (cnt.pat || 0);
+  const cogAll = cogN ? cogCorrect / cogN : 0;
+  const f = sc.wm_f || 0;
+  const wm = Math.min(1, f / 9);
+  const attn = frac('attn');
+  const spC = sc.sp_c || 0, spA = sc.sp_a || 0;
+  const spScore = Math.min(1, spC / SPEED_N);
+  const neuroAll = (wm + attn) / 2;
+  const power = frac('power');
+  const lvlShift = level > 0 ? (level - 2) * 0.06 : 0;
+  const comp = 0.45 * cogAll + 0.15 * power + 0.15 * spScore + 0.25 * neuroAll + lvlShift;
+  const z = (comp - (band.mu + adj)) / band.sd;
+  const iq = clamp(Math.round(100 + 15 * z), 55, 145);
+  const pct = clamp(Math.round(cdf(z) * 100), 1, 99);
+  const traitPct = function (t) {
+    const arr = tv[t];
+    if (!arr || arr.length === 0) return null;
+    const m = arr.reduce(function (x, y) { return x + y; }, 0) / arr.length;
+    return Math.round(((m - 1) / 4) * 100);
+  };
+  const big = {};
+  for (const t of Object.keys(BIG)) big[t] = traitPct(t);
+  const ts = {};
+  const tsVals = [];
+  for (const t of Object.keys(TEMP)) { ts[t] = traitPct(t); if (ts[t] !== null) tsVals.push(ts[t]); }
+  const tsAll = tsVals.length ? Math.round(tsVals.reduce(function (x, y) { return x + y; }, 0) / tsVals.length) : null;
+  const eiN = (cnt.per || 0) + (cnt.und || 0) + (cnt.man || 0);
+  return {
+    iq: iq, lo: clamp(iq - 10, 55, 145), hi: clamp(iq + 10, 55, 145), pct: pct, cat: iqCategory(iq), comp: comp, z: z,
+    cog: { num: frac('num'), verb: frac('verb'), logic: frac('logic'), pat: frac('pat'), all: cogAll, correct: cogCorrect, n: cogN },
+    neuro: { f: f, wm: wm, attn: attn, attnC: sum.attn || 0, attnN: cnt.attn || 0, all: neuroAll },
+    speed: { c: spC, a: spA, acc: spA ? spC / spA : 0, sp: spScore, pw: power, pwC: sum.power || 0, pwN: cnt.power || 0 },
+    big: big,
+    ei: { per: frac('per'), und: frac('und'), man: frac('man'), all: eiN ? ((sum.per || 0) + (sum.und || 0) + (sum.man || 0)) / eiN : 0 },
+    ts: ts, tsAll: tsAll, skipped: skipped, answered: answered, level: level
+  };
+}
+
+/* ===== Report content ===== */
+const LEVERAGE = {
+  cog: 'look for study or work that involves analysis and problem-solving',
+  mem: 'use it for study, planning and work that needs many details held in mind',
+  speed: 'it suits fast-moving, deadline-driven work',
+  ei: 'it helps with teamwork, mentoring and resolving conflict',
+  pers: 'lean on it deliberately in your work and relationships',
+  temp: 'it supports long-term goals, so set a few for the next five years'
+};
+function domainsFor(r) {
+  const d = [];
+  const add = function (key, label, group, score, strong, weak, tip) {
+    if (score !== null && score !== undefined) d.push({ key: key, label: label, group: group, score: score, strong: strong, weak: weak, tip: tip });
+  };
+  add('num', 'Numerical reasoning', 'cog', pc(r.cog.num), 'You spot numerical patterns and rules quickly.', 'Number patterns were harder for you.', 'Practise short number-series and mental-arithmetic puzzles for ten minutes a day, and say the rule aloud.');
+  add('verb', 'Verbal reasoning', 'cog', pc(r.cog.verb), 'You handle word relationships and categories well.', 'Word relationships and categories were harder for you.', 'Read widely and note how new words connect to ones you already know.');
+  add('logic', 'Logical reasoning', 'cog', pc(r.cog.logic), 'You reason carefully from the facts you are given.', 'Step-by-step deduction was harder for you.', 'Work through if-then puzzles slowly, writing each fact down before you decide.');
+  add('pat', 'Pattern and spatial reasoning', 'cog', pc(r.cog.pat), 'You see visual and letter patterns easily.', 'Visual and letter patterns took more effort.', 'Try sudoku and grid puzzles, and look for the repeating rule before choosing an answer.');
+  add('power', 'Depth of reasoning', 'cog', pc(r.speed.pw), 'You cope well with hard, multi-step problems.', 'Hard, multi-step problems were challenging.', 'Break a hard problem into smaller steps and write down each sub-answer.');
+  add('wm', 'Working memory', 'mem', pc(r.neuro.wm), 'You hold and use information well in your head.', 'Holding several items in mind at once was harder.', 'Chunk numbers into small groups, play short recall games, and protect your sleep.');
+  add('attn', 'Attention to detail', 'mem', pc(r.neuro.attn), 'You stay focused and notice small differences.', 'Spotting small differences took more effort.', 'Reduce distractions, work in short focused blocks, and scan systematically row by row.');
+  add('speed', 'Quick problem-solving', 'speed', pc(r.speed.sp), 'Quick-fire questions came easily to you.', 'Under time pressure your results dipped.', 'Practise mental arithmetic against a timer, and move on from questions that stall you.');
+  add('per', 'Reading emotions', 'ei', pc(r.ei.per), 'You read other people’s feelings accurately.', 'Reading emotional signals was harder for you.', 'Before you respond, pause and name what the other person might be feeling.');
+  add('und', 'Understanding emotions', 'ei', pc(r.ei.und), 'You understand how feelings blend and change.', 'Understanding how feelings develop was harder for you.', 'Keep a short journal: what happened, what you felt and what you did next.');
+  add('man', 'Managing emotions', 'ei', pc(r.ei.man), 'You choose calm, constructive responses.', 'Choosing the most constructive response was harder for you.', 'Use a pause, breathe, respond habit before reacting to a trigger.');
+  add('O', 'Curiosity and openness', 'pers', r.big.O, 'You are curious and open to new ideas.', 'You prefer the familiar and proven, so new ideas can feel less comfortable.', 'Try one unfamiliar thing a month, such as a new topic, route or cuisine.');
+  add('C', 'Organisation and follow-through', 'pers', r.big.C, 'You are organised and dependable.', 'Routines and follow-through take more effort for you.', 'Use a simple daily list with no more than three priorities.');
+  add('stab', 'Emotional steadiness', 'pers', r.big.N === null ? null : 100 - r.big.N, 'You stay calm under pressure.', 'You tend to feel stress strongly.', 'Build short calming routines such as slow breathing, a walk and regular sleep.');
+  add('A', 'Warmth and cooperation', 'pers', r.big.A, 'You are warm and cooperative.', 'You tend to be direct and competitive.', 'Ask a question or acknowledge others before giving your own view.');
+  add('E', 'Sociability', 'pers', r.big.E, 'You are outgoing and energised by people.', 'You are more reserved in groups.', 'Prepare one or two conversation openers and start in small groups.');
+  add('ts', 'Connection to past and future self', 'temp', r.tsAll, 'You feel a strong thread running through your life story.', 'Your future or past self feels somewhat distant.', 'Write a short letter to yourself in five years, and review your past achievements.');
+  return d;
+}
+function pickDomains(d, top, n, skip) {
+  const sorted = d.slice().sort(function (a, b) { return top ? b.score - a.score : a.score - b.score; });
+  const out = [], gc = {};
+  for (const x of sorted) {
+    if (skip.indexOf(x.key) >= 0) continue;
+    if ((gc[x.group] || 0) >= 2) continue;
+    out.push(x);
+    gc[x.group] = (gc[x.group] || 0) + 1;
+    if (out.length >= n) break;
+  }
+  return out;
+}
+const STYLES = [
+  { key: 'analytic', name: 'Analytical and mathematical', blurb: 'You lean towards pattern-finding, rules and careful step-by-step reasoning.', use: ['num', 'logic', 'pat', 'power', 'wm'], people: [
+    ['Srinivasa Ramanujan', 'Spotted deep patterns in numbers, then worked out why they held.'],
+    ['Shakuntala Devi', 'Known for lightning-fast mental calculation and ease with numbers.'],
+    ['Viswanathan Anand', 'Known for quick calculation and pattern recognition on the chessboard.'],
+    ['Albert Einstein', 'Known for first-principles reasoning and thought experiments.']] },
+  { key: 'curious', name: 'Curious and inventive', blurb: 'You are drawn to new ideas, and to working out how and why things happen.', use: ['O', 'pat', 'power', 'verb'], people: [
+    ['A.P.J. Abdul Kalam', 'A curious engineer who linked science, teaching and big national goals.'],
+    ['C.V. Raman', 'Asked simple questions about everyday nature, such as why the sea looks blue, and tested them carefully.'],
+    ['Leonardo da Vinci', 'Moved freely between art, anatomy and engineering, driven by curiosity.'],
+    ['Marie Curie', 'Known for persistent, hands-on investigation of the unknown.']] },
+  { key: 'strategic', name: 'Strategic and systematic', blurb: 'You combine planning, structure and calm judgement to reach long-term goals.', use: ['C', 'logic', 'power', 'stab'], people: [
+    ['Ratan Tata', 'Known for long-term, principle-led decisions.'],
+    ['Narayana Murthy', 'Built an institution through process, discipline and frugality.'],
+    ['Indra Nooyi', 'Reframed a large company’s strategy around long-term purpose.'],
+    ['Kiran Mazumdar-Shaw', 'Built an Indian biotech company from first principles in a young field.'],
+    ['Warren Buffett', 'Known for patient, rule-based decision-making.']] },
+  { key: 'empathic', name: 'Empathic and people-centred', blurb: 'You read people well and lead or help through understanding and cooperation.', use: ['ei', 'A', 'E'], people: [
+    ['Satya Nadella', 'Has spoken of empathy and a growth mindset as the base of leadership.'],
+    ['Sundar Pichai', 'Often described as calm, humble and collaborative.'],
+    ['Mahatma Gandhi', 'Persuaded through principle, patience and understanding of people.'],
+    ['Mother Teresa', 'Led through compassion and attention to individuals.']] },
+  { key: 'focused', name: 'Focused and disciplined performer', blurb: 'You bring steady concentration, speed and composure when it counts.', use: ['C', 'attn', 'ps', 'speed', 'stab'], people: [
+    ['Sachin Tendulkar', 'Known for decades of deliberate practice and calm concentration.'],
+    ['M.S. Dhoni', 'Known for cool-headed decisions under pressure.'],
+    ['Viswanathan Anand', 'Known for composed play and speed under time pressure.'],
+    ['Serena Williams', 'Known for relentless preparation and mental toughness.']] },
+  { key: 'expressive', name: 'Creative and expressive', blurb: 'You mix imagination, language and feeling to create or communicate.', use: ['O', 'verb', 'ei'], people: [
+    ['Lata Mangeshkar', 'Combined a refined ear with emotional expression and disciplined daily practice.'],
+    ['A.R. Rahman', 'Blends traditions with technology, an experimenter at heart.'],
+    ['Rabindranath Tagore', 'A poet, musician and thinker who crossed art forms.'],
+    ['Wolfgang Amadeus Mozart', 'Known for hearing and shaping musical patterns with great ease.']] }
+];
+const POPULAR_EST = [
+  ['Albert Einstein', 'Often cited above 150'],
+  ['Stephen Hawking', 'Often cited above 150'],
+  ['Leonardo da Vinci', 'Often cited above 150 (a retrospective guess)'],
+  ['Isaac Newton', 'Often cited above 150 (a retrospective guess)'],
+  ['Bill Gates', 'Often cited above 140']
+];
+function avgOf(v) {
+  const x = v.filter(function (y) { return typeof y === 'number'; });
+  return x.length ? x.reduce(function (a, b) { return a + b; }, 0) / x.length : 0;
+}
+function lowerFirst(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
+function joinList(a) {
+  if (a.length <= 1) return a.join('');
+  return a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+}
+function popularNote(r) {
+  if (r.iq >= 140) return 'Estimated band ' + r.lo + ' to ' + r.hi + '. Popular lists often place the following well-known figures at or above this level.';
+  if (r.iq >= 130) return 'Estimated band ' + r.lo + ' to ' + r.hi + '. A common popular benchmark is Mensa, which admits people in roughly the top 2% (around 130 on most scales). Well-known figures with widely circulated estimates are usually quoted well above this band, so none are shown as a close match.';
+  return 'Estimated band ' + r.lo + ' to ' + r.hi + '. Popular lists of famous people tend to quote only very high estimates, so there are no widely circulated estimates near this band to compare with. That says nothing about ability or achievement: most well-known people succeeded through practice, curiosity and persistence.';
+}
+const NOTICE = 'This is a practice and screening estimate. Age-group norms are approximate assumptions, not drawn from a validated sample, and the result is not a clinical or diagnostic assessment. It cannot diagnose or rule out any condition. For a formal assessment, speak to a qualified psychologist.';
+
+function buildReport(r, bio, bandLabel) {
+  const doms = domainsFor(r);
+  const strong = pickDomains(doms, true, 3, []);
+  const weak = pickDomains(doms, false, 3, strong.map(function (x) { return x.key; }));
+  const name = (bio.name || '').trim();
+  const lvl = LEVEL_NAMES[r.level] || 'medium';
+  const summary = (name ? name + ', your' : 'Your') + ' estimated IQ is ' + r.iq + ' (' + r.cat.toLowerCase() + '), around the ' + ord(r.pct) + ' percentile for ages ' + bandLabel + '. ' +
+    'The test adjusted itself to the starter answers and used ' + lvl + ' questions for the rest of the run. ' +
+    'The clearest strengths were ' + joinList(strong.map(function (x) { return lowerFirst(x.label); })) + ', while ' + joinList(weak.slice(0, 2).map(function (x) { return lowerFirst(x.label); })) + ' offer the most room to grow. ' +
+    'Please treat this as a snapshot of performance on the day, not a fixed measure of ability.';
+  const sc = {
+    num: pc(r.cog.num), verb: pc(r.cog.verb), logic: pc(r.cog.logic), pat: pc(r.cog.pat), power: pc(r.speed.pw),
+    wm: pc(r.neuro.wm), attn: pc(r.neuro.attn), ps: pc(r.speed.sp), speed: pc(r.speed.sp), ei: pc(r.ei.all),
+    O: r.big.O, C: r.big.C, E: r.big.E, A: r.big.A, stab: r.big.N === null ? null : 100 - r.big.N, ts: r.tsAll
+  };
+  const styles = STYLES.map(function (s) { return { style: s, score: Math.round(avgOf(s.use.map(function (k) { return sc[k]; }))) }; })
+    .sort(function (a, b) { return b.score - a.score; });
+  return { strong: strong, weak: weak, summary: summary, styles: styles };
+}
+
+function buildPayload(ctx) {
+  const r = ctx.result, rep = ctx.report, bio = ctx.bio;
+  const band = ctx.band;
+  const starterC = ctx.starterC;
+  const top = rep.styles[0], second = rep.styles[1];
+  return {
+    appName: APP_NAME,
+    testVersion: TEST_VERSION,
+    reportId: ctx.reportId,
+    timestamp: ctx.timestamp,
+    testDate: ctx.testDate,
+    biodata: {
+      name: (bio.name || '').trim(), age: parseInt(bio.age, 10), ageBand: band.label, gender: bio.gender || '', education: bio.edu || '',
+      occupation: bio.occ || '', state: bio.state || '', language: bio.lang || '',
+      englishComfort: ENG_LABELS[(parseInt(bio.eng, 10) || 3) - 1], sleepLastNight: bio.sleep || '', similarTestBefore: bio.prior || ''
+    },
+    estimate: { iq: r.iq, rangeLow: r.lo, rangeHigh: r.hi, percentile: r.pct, category: r.cat },
+    summary: rep.summary,
+    strengths: rep.strong.map(function (d) { return { area: d.label, observation: d.strong, putItToWork: LEVERAGE[d.group] }; }),
+    weaknesses: rep.weak.map(function (d) { return { area: d.label, observation: d.weak, tip: d.tip }; }),
+    thinkingStyleMatch: {
+      closest: { style: top.style.name, description: top.style.blurb, people: top.style.people.map(function (p) { return { name: p[0], line: p[1] }; }) },
+      alsoClose: { style: second.style.name, people: second.style.people.slice(0, 3).map(function (p) { return p[0]; }) }
+    },
+    popularComparison: {
+      note: popularNote(r),
+      label: 'Popular estimates, unverified. Not measurements.',
+      figures: r.iq >= 140 ? POPULAR_EST.map(function (p) { return { name: p[0], estimate: p[1], status: 'popular estimate, unverified' }; }) : []
+    },
+    sectionScores: {
+      routing: { starterCorrect: starterC, starterOutOf: STARTER_N, level: r.level, levelName: LEVEL_NAMES[r.level], compositeShiftPoints: (r.level - 2) * 6 },
+      cognitive: { numericalPct: pc(r.cog.num), verbalPct: pc(r.cog.verb), logicalPct: pc(r.cog.logic), patternPct: pc(r.cog.pat), correct: r.cog.correct, outOf: r.cog.n, accuracyPct: pc(r.cog.all) },
+      memoryAttention: { forwardDigitSpan: r.neuro.f, workingMemoryPct: pc(r.neuro.wm), attentionCorrect: r.neuro.attnC, attentionOutOf: r.neuro.attnN, attentionPct: pc(r.neuro.attn) },
+      speedPower: { speedCorrect: r.speed.c, speedAttempted: r.speed.a, speedOutOf: SPEED_N, speedSeconds: SPEED_SECS, speedAccuracyPct: pc(r.speed.acc), speedPct: pc(r.speed.sp), powerCorrect: r.speed.pwC, powerOutOf: r.speed.pwN, powerPct: pc(r.speed.pw) },
+      bigFive: { openness: r.big.O, conscientiousness: r.big.C, extraversion: r.big.E, agreeableness: r.big.A, neuroticism: r.big.N, note: 'Two items per trait; indicative only.' },
+      emotionalIntelligence: { perceivingPct: pc(r.ei.per), understandingPct: pc(r.ei.und), managingPct: pc(r.ei.man), overallPct: pc(r.ei.all) },
+      temporalSelfContinuity: { overall: r.tsAll, similarity: r.ts.FS, vividness: r.ts.FV, positivity: r.ts.FP, pastConnection: r.ts.PC },
+      composite: Math.round(r.comp * 1000) / 1000,
+      norms: { bandMean: band.mu, bandSD: band.sd, biodataAdjustment: ctx.adj.adj, adjustmentReasons: ctx.adj.notes },
+      itemCounts: { scoredQuestions: r.answered + r.skipped, answered: r.answered, skipped: r.skipped, timedTasks: 'digit span and speed block (not counted in the scored questions)' }
+    },
+    disclaimer: NOTICE
+  };
+}
+
+function buildReportText(p) {
+  const L = [];
+  const hr = '------------------------------------------------------------';
+  const nv = function (v) { return v === null || v === undefined ? 'n/a' : v; };
+  L.push(p.appName.toUpperCase() + ' - FINAL CLIENT REPORT');
+  L.push(hr);
+  L.push('Client:        ' + (p.biodata.name || 'Not provided'));
+  L.push('Date of test:  ' + p.testDate);
+  L.push('Report ID:     ' + p.reportId);
+  L.push('Age group:     ' + p.biodata.ageBand + ' (age ' + p.biodata.age + ')');
+  L.push('Test version:  ' + p.testVersion);
+  L.push('Submitted:     ' + p.timestamp);
+  L.push('');
+  L.push('BIODATA');
+  L.push(hr);
+  L.push('Gender: ' + (p.biodata.gender || '-') + ' | Education: ' + (p.biodata.education || '-') + ' | Occupation: ' + (p.biodata.occupation || '-'));
+  L.push('State/UT: ' + (p.biodata.state || '-') + ' | First language: ' + (p.biodata.language || '-') + ' | English comfort: ' + p.biodata.englishComfort);
+  L.push('Sleep last night: ' + (p.biodata.sleepLastNight || '-') + ' | Similar test before: ' + (p.biodata.similarTestBefore || '-'));
+  L.push('');
+  L.push('ESTIMATED IQ');
+  L.push(hr);
+  L.push('Estimated IQ: ' + p.estimate.iq + ' (likely range ' + p.estimate.rangeLow + ' to ' + p.estimate.rangeHigh + ')');
+  L.push('Percentile:   ' + ord(p.estimate.percentile) + ' within age group ' + p.biodata.ageBand);
+  L.push('Category:     ' + p.estimate.category + ' (mean 100, SD 15)');
+  L.push('');
+  L.push('OVERALL SUMMARY');
+  L.push(hr);
+  L.push(p.summary);
+  L.push('');
+  L.push('STRONG AREAS');
+  L.push(hr);
+  p.strengths.forEach(function (s, i) { L.push((i + 1) + '. ' + s.area + ': ' + s.observation + ' Put it to work: ' + s.putItToWork + '.'); });
+  L.push('');
+  L.push('AREAS NEEDING MOST WORK (relative to the rest of the profile)');
+  L.push(hr);
+  p.weaknesses.forEach(function (s, i) { L.push((i + 1) + '. ' + s.area + ': ' + s.observation + ' Tip: ' + s.tip); });
+  L.push('');
+  L.push('THINKING-STYLE MATCH');
+  L.push(hr);
+  L.push('Closest: ' + p.thinkingStyleMatch.closest.style + '. ' + p.thinkingStyleMatch.closest.description);
+  p.thinkingStyleMatch.closest.people.forEach(function (x) { L.push('  - ' + x.name + ': ' + x.line); });
+  L.push('Also close: ' + p.thinkingStyleMatch.alsoClose.style + ' (' + p.thinkingStyleMatch.alsoClose.people.join(', ') + ')');
+  L.push('A light-hearted comparison based on public reputations; it does not mean the client shares these people\u2019s abilities.');
+  L.push('');
+  L.push('ESTIMATED IQ BAND: POPULAR COMPARISONS');
+  L.push(hr);
+  L.push(p.popularComparison.note);
+  p.popularComparison.figures.forEach(function (x) { L.push('  - ' + x.name + ': ' + x.estimate + ' [popular estimate, unverified]'); });
+  L.push('Every figure above is a popular estimate, unverified. These are not measurements.');
+  L.push('');
+  L.push('DISCLAIMER');
+  L.push(hr);
+  L.push(p.disclaimer);
+  L.push('');
+  L.push('EXAMINER DETAILS (for the practitioner)');
+  L.push(hr);
+  const s = p.sectionScores;
+  L.push('Adaptive routing: starter ' + s.routing.starterCorrect + '/' + s.routing.starterOutOf + ' correct -> ' + s.routing.levelName + ' level (composite shift ' + s.routing.compositeShiftPoints + ' points).');
+  L.push('Cognitive: numerical ' + s.cognitive.numericalPct + '%, verbal ' + s.cognitive.verbalPct + '%, logical ' + s.cognitive.logicalPct + '%, pattern ' + s.cognitive.patternPct + '%; ' + s.cognitive.correct + ' of ' + s.cognitive.outOf + ' correct (' + s.cognitive.accuracyPct + '%).');
+  L.push('Memory/attention: forward digit span ' + s.memoryAttention.forwardDigitSpan + ' (' + s.memoryAttention.workingMemoryPct + '%); attention ' + s.memoryAttention.attentionCorrect + '/' + s.memoryAttention.attentionOutOf + ' (' + s.memoryAttention.attentionPct + '%).');
+  L.push('Speed: ' + s.speedPower.speedCorrect + '/' + s.speedPower.speedOutOf + ' correct, ' + s.speedPower.speedAttempted + ' attempted in ' + s.speedPower.speedSeconds + 's (accuracy ' + s.speedPower.speedAccuracyPct + '%, score ' + s.speedPower.speedPct + '%).');
+  L.push('Power: ' + s.speedPower.powerCorrect + '/' + s.speedPower.powerOutOf + ' (' + s.speedPower.powerPct + '%).');
+  L.push('Big Five (0-100, two items per trait, indicative only): O ' + nv(s.bigFive.openness) + ', C ' + nv(s.bigFive.conscientiousness) + ', E ' + nv(s.bigFive.extraversion) + ', A ' + nv(s.bigFive.agreeableness) + ', N ' + nv(s.bigFive.neuroticism) + '.');
+  L.push('Emotional intelligence: perceiving ' + s.emotionalIntelligence.perceivingPct + '%, understanding ' + s.emotionalIntelligence.understandingPct + '%, managing ' + s.emotionalIntelligence.managingPct + '%, overall ' + s.emotionalIntelligence.overallPct + '%.');
+  L.push('Temporal self-continuity (0-100): overall ' + nv(s.temporalSelfContinuity.overall) + ', similarity ' + nv(s.temporalSelfContinuity.similarity) + ', vividness ' + nv(s.temporalSelfContinuity.vividness) + ', positivity ' + nv(s.temporalSelfContinuity.positivity) + ', past connection ' + nv(s.temporalSelfContinuity.pastConnection) + '.');
+  L.push('Composite ' + s.composite + '; norm mean ' + s.norms.bandMean + ', SD ' + s.norms.bandSD + '; biodata adjustment ' + s.norms.biodataAdjustment.toFixed(2) + (s.norms.adjustmentReasons.length ? ' (' + s.norms.adjustmentReasons.join(', ') + ')' : '') + '.');
+  L.push('Scored questions ' + s.itemCounts.scoredQuestions + ' (answered ' + s.itemCounts.answered + ', skipped ' + s.itemCounts.skipped + '), plus the digit span and speed block. Screening-length run: treat trait, EI and temporal scores as indicative.');
+  return L.join('\n');
+}
+
+/* ===== App state and UI ===== */
+const S = {
+  phase: 'start',
+  bio: { name: '', age: '', gender: '', edu: '', occ: '', state: '', lang: '', eng: '3', sleep: '', prior: '' },
+  consent: false,
+  steps: [], idx: 0, level: 0, answers: {}, scores: {},
+  payload: null, text: '', submitting: false, submitted: false, error: ''
+};
+let EST = null;
+const timers = { to: null, iv: null };
+const root = (typeof document !== 'undefined') ? document.getElementById('app') : null;
+
+function clearTimers() {
+  if (timers.to) { clearTimeout(timers.to); timers.to = null; }
+  if (timers.iv) { clearInterval(timers.iv); timers.iv = null; }
+}
+function $(sel, el) { return (el || document).querySelector(sel); }
+function $$(sel, el) { return Array.prototype.slice.call((el || document).querySelectorAll(sel)); }
+
+function estimate() {
+  const all = buildStarter().concat(buildRest(2));
+  let secs = 0, q = 0, timed = 0;
+  for (const s of all) {
+    if (s.kind === 'mc') { secs += AREA_SECS[s.item.area] || 30; q += 1; }
+    else if (s.kind === 'likert') { secs += 8; q += 1; }
+    else if (s.kind === 'span') { secs += 60; timed += 1; }
+    else if (s.kind === 'speed') { secs += s.secs + 10; timed += 1; }
+  }
+  return { total: all.length, q: q, timed: timed, minutes: Math.max(5, Math.round(secs / 60)) };
+}
+
+function headerHtml() {
+  return '<header class="top"><h1>' + esc(APP_NAME) + '</h1><p class="sub">A short screening before your counselling session</p></header>';
+}
+function render() {
+  clearTimers();
+  if (S.phase === 'start') renderStart();
+  else if (S.phase === 'run') renderRun();
+  else if (S.phase === 'review') renderReview();
+  else renderDone();
+  if (typeof window !== 'undefined' && window.scrollTo) window.scrollTo(0, 0);
+}
+
+/* ---- start / biodata ---- */
+function optionsHtml(list, val) {
+  return list.map(function (o) { return '<option value="' + esc(o) + '"' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
+}
+function selectField(key, label, list) {
+  return '<label class="field"><span>' + label + '</span><select data-bio="' + key + '"><option value="">Select</option>' + optionsHtml(list, S.bio[key]) + '</select></label>';
+}
+function renderStart() {
+  const b = S.bio;
+  const eng = ENG_LABELS.map(function (l, i) {
+    return '<button type="button" class="seg' + (String(i + 1) === b.eng ? ' sel' : '') + '" data-eng="' + (i + 1) + '">' + l + '</button>';
+  }).join('');
+  root.innerHTML = headerHtml() +
+    '<div class="notice"><strong>Screening only.</strong> ' + esc(NOTICE) + '</div>' +
+    '<section class="card"><h2>Length of the test</h2>' +
+    '<p class="big">' + EST.q + ' questions plus ' + EST.timed + ' short timed tasks · about ' + EST.minutes + ' minutes</p>' +
+    '<p class="muted">The ' + EST.q + ' questions are all scored. The ' + EST.timed + ' short timed tasks (a digit-memory task and a 35-second speed block) are extra. Most people finish in ' + EST.minutes + ' to ' + (EST.minutes + 4) + ' minutes, so please allow ' + (EST.minutes + 5) + ' minutes. The first few questions set the difficulty for the rest of the run.</p></section>' +
+    '<section class="card"><h2>About you</h2>' +
+    '<p class="muted">Your age sets the difficulty and the norms used for your estimate, and the other answers refine it slightly.</p>' +
+    '<label class="field"><span>Name</span><input type="text" data-bio="name" autocomplete="name" placeholder="Your full name" value="' + esc(b.name) + '"></label>' +
+    '<label class="field"><span>Age (15 to 55)</span><input type="number" inputmode="numeric" min="15" max="55" data-bio="age" placeholder="For example 27" value="' + esc(b.age) + '"></label>' +
+    '<p class="err" id="ageErr" style="display:none">Please enter an age between 15 and 55.</p>' +
+    selectField('gender', 'Gender (optional)', GENDERS) +
+    selectField('edu', 'Highest education so far', EDUS) +
+    selectField('occ', 'Current occupation', OCCS) +
+    selectField('state', 'State or union territory', STATES) +
+    selectField('lang', 'First language', LANGS) +
+    '<div class="field"><span>How comfortable are you reading English? Many questions use English words.</span><div class="segs">' + eng + '</div></div>' +
+    selectField('sleep', 'Sleep last night', SLEEPS) +
+    selectField('prior', 'Have you taken a similar test before?', PRIORS) +
+    '<label class="check"><input type="checkbox" id="consent"' + (S.consent ? ' checked' : '') + '><span>I understand that my answers and results will be sent to my counsellor, and that I will not see the results on this screen.</span></label>' +
+    '<button type="button" class="btn primary" id="startBtn" disabled>Start the assessment</button>' +
+    '<p class="muted small" id="startHint"></p></section>' +
+    '<section class="card"><h2>What to expect</h2><p class="muted">You will see one question after another, mixed together at random. A few short memory and timed tasks appear at random points and start only when you are ready. Please work somewhere quiet and give the first few questions your best effort. You can skip any question; skipped questions count as unanswered.</p></section>';
+  $$('[data-bio]').forEach(function (el) {
+    const ev = el.tagName === 'SELECT' ? 'change' : 'input';
+    el.addEventListener(ev, function () { S.bio[el.getAttribute('data-bio')] = el.value; refreshStart(); });
+  });
+  $$('[data-eng]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      S.bio.eng = el.getAttribute('data-eng');
+      $$('[data-eng]').forEach(function (x) { x.classList.toggle('sel', x === el); });
+    });
+  });
+  $('#consent').addEventListener('change', function (e) { S.consent = e.target.checked; refreshStart(); });
+  $('#startBtn').addEventListener('click', startTest);
+  refreshStart();
+}
+function startValid() {
+  const a = parseInt(S.bio.age, 10);
+  const ageOk = Number.isFinite(a) && a >= 15 && a <= 55;
+  return { ageOk: ageOk, ok: ageOk && S.bio.name.trim() !== '' && S.bio.edu !== '' && S.consent };
+}
+function refreshStart() {
+  const v = startValid();
+  $('#startBtn').disabled = !v.ok;
+  $('#ageErr').style.display = (S.bio.age !== '' && !v.ageOk) ? 'block' : 'none';
+  let hint = '';
+  if (!v.ok) {
+    const miss = [];
+    if (S.bio.name.trim() === '') miss.push('your name');
+    if (!v.ageOk) miss.push('a valid age');
+    if (S.bio.edu === '') miss.push('your education');
+    if (!S.consent) miss.push('the consent tick box');
+    hint = 'Still needed: ' + miss.join(', ') + '.';
+  }
+  $('#startHint').textContent = hint;
+}
+function startTest() {
+  if (!startValid().ok) return;
+  S.steps = buildStarter();
+  S.level = 0; S.idx = 0; S.answers = {}; S.scores = {};
+  S.payload = null; S.text = ''; S.submitting = false; S.submitted = false; S.error = '';
+  S.phase = 'run';
+  render();
+}
+
+/* ---- run ---- */
+function renderRun() {
+  const step = S.steps[S.idx];
+  const total = S.level === 0 ? EST.total : S.steps.length;
+  const pct = Math.min(100, (S.idx / total) * 100);
+  root.innerHTML = headerHtml() +
+    '<div class="progress"><div class="bar"><span style="width:' + pct + '%"></span></div>' +
+    '<div class="plabel"><span>Question ' + (S.idx + 1) + ' of ' + total + '</span><span>' + Math.round(pct) + '% complete</span></div>' +
+    ((step.kind === 'span' || step.kind === 'speed') ? '<div class="muted small">Short task</div>' : '') + '</div>' +
+    '<section class="card" id="panel"></section>';
+  const panel = $('#panel');
+  if (step.kind === 'mc') mountMC(step, panel);
+  else if (step.kind === 'likert') mountLikert(step, panel);
+  else if (step.kind === 'span') mountSpan(step, panel);
+  else mountSpeed(step, panel);
+}
+function gridHtml(g, pickMode) {
+  return '<div class="grid" style="grid-template-columns:repeat(' + g.cols + ',minmax(0,1fr));max-width:' + (g.maxW || 300) + 'px">' +
+    g.cells.map(function (c, i) {
+      const st = 'min-height:' + (g.minH || 56) + 'px;font-size:' + (g.font || 22) + 'px';
+      const q = c === '?' ? ' q' : '';
+      return pickMode ? '<button type="button" class="cell' + q + '" data-i="' + i + '" style="' + st + '">' + esc(c) + '</button>'
+        : '<div class="cell' + q + '" style="' + st + '">' + esc(c) + '</div>';
+    }).join('') + '</div>';
+}
+function bindChoice(panel, sel, onPick) {
+  $$(sel, panel).forEach(function (el) {
+    el.addEventListener('click', function () {
+      $$(sel, panel).forEach(function (x) { x.classList.toggle('sel', x === el); });
+      onPick(parseInt(el.getAttribute('data-i'), 10));
+    });
+  });
+}
+function answerAndNext(id, sel) {
+  S.answers[id] = sel;
+  next();
+}
+function mountMC(step, panel) {
+  const it = step.item;
+  let sel = null, done = false;
+  panel.innerHTML = '<div class="prompt">' + esc(it.prompt) + '</div>' +
+    (it.grid ? gridHtml(it.grid, !!it.pick) : '') +
+    (!it.pick ? '<div class="opts">' + it.options.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '">' + esc(o) + '</button>'; }).join('') + '</div>' : '') +
+    '<div class="row"><button type="button" class="btn primary" id="confirm" disabled>Confirm answer</button><button type="button" class="btn" id="skip">Skip</button></div>';
+  bindChoice(panel, it.pick ? '.cell' : '.opt', function (i) { sel = i; $('#confirm').disabled = false; });
+  $('#confirm').addEventListener('click', function () { if (done || sel === null) return; done = true; answerAndNext(it.id, sel); });
+  $('#skip').addEventListener('click', function () { if (done) return; done = true; answerAndNext(it.id, -1); });
+}
+function mountLikert(step, panel) {
+  const it = step.item;
+  let sel = null, done = false;
+  panel.innerHTML = '<div class="muted">How well does this describe you?</div><div class="prompt strong">' + esc(it.text) + '</div>' +
+    '<div class="opts">' + LIKERT.map(function (o, i) { return '<button type="button" class="opt" data-i="' + i + '">' + (i + 1) + ' · ' + esc(o) + '</button>'; }).join('') + '</div>' +
+    '<div class="row"><button type="button" class="btn primary" id="confirm" disabled>Confirm answer</button><button type="button" class="btn" id="skip">Skip</button></div>';
+  bindChoice(panel, '.opt', function (i) { sel = i; $('#confirm').disabled = false; });
+  $('#confirm').addEventListener('click', function () { if (done || sel === null) return; done = true; answerAndNext(it.id, sel); });
+  $('#skip').addEventListener('click', function () { if (done) return; done = true; answerAndNext(it.id, -1); });
+}
+function genDigits(n) {
+  let s = '';
+  while (s.length < n) {
+    const d = String(ri(0, 9));
+    if (s.length === 0 || s[s.length - 1] !== d) s += d;
+  }
+  return s;
+}
+function mountSpan(step, panel) {
+  const dir = step.dir;
+  const startLen = dir === 'fwd' ? 3 : 2, maxLen = dir === 'fwd' ? 9 : 8;
+  let len = startLen, fails = 0, best = 0, trial = 1, digits = genDigits(len), phase = 'show', input = '', finished = false;
+  function done(v) {
+    if (finished) return;
+    finished = true; clearTimers();
+    S.scores[dir === 'fwd' ? 'wm_f' : 'wm_b'] = v;
+    next();
+  }
+  function submit(skip) {
+    const target = dir === 'fwd' ? digits : digits.split('').reverse().join('');
+    const ok = !skip && input === target;
+    input = ''; trial += 1;
+    if (ok) {
+      best = len;
+      if (len >= maxLen) { done(len); return; }
+      len += 1; fails = 0; digits = genDigits(len); phase = 'show'; draw();
+    } else if (fails === 0) {
+      fails = 1; digits = genDigits(len); phase = 'show'; draw();
+    } else { done(best); }
+  }
+  function updateEntry() {
+    $('#entry').textContent = input + '·'.repeat(len - input.length);
+    $('#subm').disabled = input.length !== len;
+  }
+  function draw() {
+    clearTimers();
+    const instr = dir === 'fwd' ? 'Memorise the digits, then type them in the same order.' : 'Memorise the digits, then type them in reverse order (last digit first).';
+    if (phase === 'show') {
+      panel.innerHTML = '<p class="muted">' + instr + '</p><div class="digits">' + digits + '</div><p class="muted small">Watch closely · trial ' + trial + '</p>';
+      timers.to = setTimeout(function () { phase = 'recall'; draw(); }, 900 + len * 800);
+    } else {
+      const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', 'Clear'];
+      panel.innerHTML = '<p class="muted">' + instr + '</p><div class="digits entry" id="entry"></div>' +
+        '<div class="keypad">' + keys.map(function (k) { return '<button type="button" class="key" data-k="' + k + '">' + k + '</button>'; }).join('') + '</div>' +
+        '<div class="row"><button type="button" class="btn primary" id="subm" disabled>Submit</button><button type="button" class="btn" id="skipd">Skip this one</button></div>' +
+        '<p class="muted small">Enter ' + len + ' digits · trial ' + trial + '</p>';
+      $$('.key', panel).forEach(function (el) {
+        el.addEventListener('click', function () {
+          const k = el.getAttribute('data-k');
+          if (k === '⌫') input = input.slice(0, -1);
+          else if (k === 'Clear') input = '';
+          else if (input.length < len) input += k;
+          updateEntry();
+        });
+      });
+      $('#subm').addEventListener('click', function () { if (input.length === len) submit(false); });
+      $('#skipd').addEventListener('click', function () { submit(true); });
+      updateEntry();
+    }
+  }
+  draw();
+}
+function mountSpeed(step, panel) {
+  const items = step.items, total = step.secs;
+  let i = 0, c = 0, a = 0, finished = false, endAt = 0;
+  function fin() {
+    if (finished) return;
+    finished = true; clearTimers();
+    S.scores.sp_c = c; S.scores.sp_a = a;
+    next();
+  }
+  function remaining() { return Math.max(0, Math.ceil((endAt - Date.now()) / 1000)); }
+  function tick() {
+    const r = remaining();
+    const el = $('#tleft'); if (el) el.textContent = r + 's';
+    const b = $('#tbar'); if (b) b.style.width = (r / total * 100) + '%';
+    if (r <= 0) fin();
+  }
+  function advance() { i += 1; if (i >= items.length) fin(); else drawItem(); }
+  function drawItem() {
+    const it = items[i];
+    panel.innerHTML = '<div class="tline"><span class="muted small">Time remaining</span><strong id="tleft">' + remaining() + 's</strong></div>' +
+      '<div class="bar thin"><span id="tbar" style="width:' + (remaining() / total * 100) + '%"></span></div>' +
+      '<div class="muted small">Item ' + (i + 1) + ' of ' + items.length + '</div>' +
+      '<div class="prompt strong">' + esc(it.prompt) + '</div>' +
+      '<div class="opts two">' + it.options.map(function (o, k) { return '<button type="button" class="opt" data-i="' + k + '">' + esc(o) + '</button>'; }).join('') + '</div>' +
+      '<div class="row"><button type="button" class="btn" id="skipq">Skip</button></div>';
+    $$('.opt', panel).forEach(function (el) {
+      el.addEventListener('click', function () {
+        if (finished) return;
+        a += 1;
+        if (parseInt(el.getAttribute('data-i'), 10) === it.answer) c += 1;
+        advance();
+      });
+    });
+    $('#skipq').addEventListener('click', function () { if (!finished) advance(); });
+  }
+  panel.innerHTML = '<p>You will see up to ' + items.length + ' easy questions. Answer as many as you can, as accurately as you can, in ' + total + ' seconds. The clock starts when you press the button.</p>' +
+    '<button type="button" class="btn primary" id="go">Start the clock</button>';
+  $('#go').addEventListener('click', function () {
+    endAt = Date.now() + total * 1000;
+    drawItem();
+    timers.iv = setInterval(tick, 200);
+  });
+}
+function next() {
+  if (S.level === 0 && S.idx + 1 === STARTER_N) {
+    S.level = routeLevel(S.steps, S.answers);
+    S.steps = S.steps.concat(buildRest(S.level));
+    S.idx += 1;
+    renderRun();
+    return;
+  }
+  if (S.idx + 1 >= S.steps.length) { finishRun(); return; }
+  S.idx += 1;
+  renderRun();
+}
+
+/* ---- finish, review, submit ---- */
+function finishRun() {
+  clearTimers();
+  const ageN = parseInt(S.bio.age, 10);
+  const band = bandForAge(ageN);
+  const adj = bioAdjust(S.bio, ageN);
+  const result = computeResult(S.steps, S.answers, S.scores, band, adj.adj, S.level);
+  const report = buildReport(result, S.bio, band.label);
+  const d = new Date();
+  const p2 = function (n) { return n < 10 ? '0' + n : String(n); };
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  const starterC = S.steps.slice(0, STARTER_N).reduce(function (acc, s) { return acc + (s.kind === 'mc' ? scoreItem(s.item, S.answers[s.item.id]) : 0); }, 0);
+  S.payload = buildPayload({
+    result: result, report: report, bio: S.bio, band: band, adj: adj, starterC: starterC,
+    reportId: 'MIQ-' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + '-' + code,
+    timestamp: d.toISOString(),
+    testDate: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  });
+  S.text = buildReportText(S.payload);
+  S.phase = 'review';
+  render();
+}
+function renderReview() {
+  root.innerHTML = headerHtml() +
+    '<section class="card"><h2>All questions answered</h2>' +
+    '<p>Thank you for completing the assessment. Press <strong>Submit test</strong> to send your answers to your counsellor. Your results are not shown on this screen; your counsellor will share them with you.</p>' +
+    (S.error ? '<div class="error">' + esc(S.error) + '</div>' : '') +
+    '<button type="button" class="btn primary" id="submitBtn"' + (S.submitting ? ' disabled' : '') + '>' + (S.submitting ? 'Submitting…' : (S.error ? 'Retry submit' : 'Submit test')) + '</button>' +
+    '<p class="muted small">Please keep this page open until you see the thank-you message.</p></section>';
+  $('#submitBtn').addEventListener('click', submitTest);
+}
+function submitTest() {
+  if (S.submitting || S.submitted || !S.payload) return;
+  S.submitting = true; S.error = '';
+  renderReview();
+  const notConfigured = !SHEET_URL || SHEET_URL.indexOf('PASTE_YOUR') === 0;
+  if (notConfigured) {
+    S.submitting = false;
+    S.error = 'This test is not connected to a results sheet yet. Please tell your counsellor. Your answers are kept on this page.';
+    renderReview();
+    return;
+  }
+  const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const t = ctrl ? setTimeout(function () { ctrl.abort(); }, 25000) : null;
+  fetch(SHEET_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ data: S.payload, reportText: S.text }),
+    signal: ctrl ? ctrl.signal : undefined
+  }).then(function () {
+    if (t) clearTimeout(t);
+    S.submitting = false; S.submitted = true; S.phase = 'done';
+    render();
+  }).catch(function () {
+    if (t) clearTimeout(t);
+    S.submitting = false;
+    S.error = 'We could not send your test. Please check your internet connection and try again. Your answers are kept on this page.';
+    renderReview();
+  });
+}
+function renderDone() {
+  root.innerHTML = headerHtml() +
+    '<section class="card center"><h2>Thank you</h2><p class="big">Thank you, your test has been submitted. Your counsellor will share your results with you.</p></section>' +
+    (DEBUG_PREVIEW ? '<section class="card"><h2>Debug preview</h2><pre>' + esc(S.text) + '</pre></section>' : '');
+}
+
+if (typeof document !== 'undefined') {
+  document.title = APP_NAME;
+  EST = estimate();
+  render();
+}
+
+</script>
+</body>
+</html>
